@@ -4,20 +4,20 @@ Owner: Anany
 Official Docs: https://platform.detectif.ai/docs/speaker-verification/
 """
 
-from datetime import datetime, timezone
 import os
+import time
 from typing import Any, Dict, Optional
 import uuid
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 import httpx
-
-load_dotenv()
 
 
 class EidosClient:
     """Client for DetectifAI Eidos speaker enrollment and verification endpoints."""
 
     def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
+        load_dotenv()
         self.api_key = api_key or os.getenv("DETECTIF_API_KEY", "")
         self.base_url = (base_url or os.getenv("DETECTIF_BASE_URL", "https://platform.detectif.ai")).rstrip("/")
         fallback_env = os.getenv("DETECTIF_MOCK_FALLBACK", "True").lower()
@@ -39,7 +39,10 @@ class EidosClient:
         Enrolls a voice sample with DetectifAI /v1/speakers/enroll.
         Length: 15 to 60 seconds (at least 10s speech).
         """
+        start_time = time.perf_counter()
+
         if not self.is_live_configured():
+            latency = round((time.perf_counter() - start_time) * 1000, 1)
             return {
                 "request_id": f"req_sim_{uuid.uuid4().hex[:16]}",
                 "operation_id": f"op_sim_{uuid.uuid4().hex[:24]}",
@@ -59,6 +62,7 @@ class EidosClient:
                     "name": "eidos",
                     "version": "1.0",
                 },
+                "latency_ms": latency,
                 "is_live_api": False,
                 "note": "Voice biometric profile enrolled in local biometric vault (mock mode).",
             }
@@ -72,25 +76,50 @@ class EidosClient:
             data["display_name"] = display_name
         files = {"file": (filename, audio_bytes, content_type)}
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            resp = await client.post(
-                f"{self.base_url}/v1/speakers/enroll",
-                headers=headers,
-                data=data,
-                files=files,
-            )
-            if resp.status_code not in (200, 201):
-                error_body = resp.json().get("error", {})
-                return {
-                    "error": True,
-                    "status_code": resp.status_code,
-                    "code": error_body.get("code", "api_error"),
-                    "message": error_body.get("message", resp.text),
-                    "is_live_api": True,
-                }
-            data_resp = resp.json()
-            data_resp["is_live_api"] = True
-            return data_resp
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/v1/speakers/enroll",
+                    headers=headers,
+                    data=data,
+                    files=files,
+                )
+                latency = round((time.perf_counter() - start_time) * 1000, 1)
+
+                if resp.status_code not in (200, 201):
+                    try:
+                        err_json = resp.json()
+                        error_body = err_json.get("error", {})
+                        code = error_body.get("code", "api_error")
+                        message = error_body.get("message", resp.text)
+                    except Exception:
+                        code = "http_error"
+                        message = resp.text
+
+                    return {
+                        "error": True,
+                        "status_code": resp.status_code,
+                        "code": code,
+                        "message": message,
+                        "latency_ms": latency,
+                        "is_live_api": True,
+                    }
+
+                data_resp = resp.json()
+                data_resp["latency_ms"] = latency
+                data_resp["is_live_api"] = True
+                data_resp["request_id"] = data_resp.get("request_id") or resp.headers.get("x-request-id", "")
+                return data_resp
+        except httpx.RequestError as exc:
+            latency = round((time.perf_counter() - start_time) * 1000, 1)
+            return {
+                "error": True,
+                "status_code": 503,
+                "code": "network_unreachable",
+                "message": f"Network connection to DetectifAI platform failed: {str(exc)}",
+                "latency_ms": latency,
+                "is_live_api": True,
+            }
 
     async def verify_speaker(
         self,
@@ -104,7 +133,10 @@ class EidosClient:
         Verifies voice sample against enrolled speaker via DetectifAI /v1/speakers/verify.
         Length: 3 to 60 seconds (at least 2s speech).
         """
+        start_time = time.perf_counter()
+
         if not self.is_live_configured():
+            latency = round((time.perf_counter() - start_time) * 1000, 1)
             return {
                 "request_id": f"req_sim_{uuid.uuid4().hex[:16]}",
                 "operation_id": f"op_sim_{uuid.uuid4().hex[:24]}",
@@ -115,6 +147,7 @@ class EidosClient:
                     "similarity": 0.884,  # high similarity score
                     "duration_seconds": 5.4,
                 },
+                "latency_ms": latency,
                 "is_live_api": False,
                 "note": "Biometric match verified against enrolled acoustic embeddings (mock mode).",
             }
@@ -128,22 +161,48 @@ class EidosClient:
             data["detect_deepfake"] = "true"
         files = {"file": (filename, audio_bytes, content_type)}
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            resp = await client.post(
-                f"{self.base_url}/v1/speakers/verify",
-                headers=headers,
-                data=data,
-                files=files,
-            )
-            if resp.status_code != 200:
-                error_body = resp.json().get("error", {})
-                return {
-                    "error": True,
-                    "status_code": resp.status_code,
-                    "code": error_body.get("code", "api_error"),
-                    "message": error_body.get("message", resp.text),
-                    "is_live_api": True,
-                }
-            data_resp = resp.json()
-            data_resp["is_live_api"] = True
-            return data_resp
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/v1/speakers/verify",
+                    headers=headers,
+                    data=data,
+                    files=files,
+                )
+                latency = round((time.perf_counter() - start_time) * 1000, 1)
+
+                if resp.status_code != 200:
+                    try:
+                        err_json = resp.json()
+                        error_body = err_json.get("error", {})
+                        code = error_body.get("code", "api_error")
+                        message = error_body.get("message", resp.text)
+                    except Exception:
+                        code = "http_error"
+                        message = resp.text
+
+                    return {
+                        "error": True,
+                        "status_code": resp.status_code,
+                        "code": code,
+                        "message": message,
+                        "latency_ms": latency,
+                        "is_live_api": True,
+                    }
+
+                data_resp = resp.json()
+                data_resp["latency_ms"] = latency
+                data_resp["is_live_api"] = True
+                data_resp["request_id"] = data_resp.get("request_id") or resp.headers.get("x-request-id", "")
+                return data_resp
+        except httpx.RequestError as exc:
+            latency = round((time.perf_counter() - start_time) * 1000, 1)
+            return {
+                "error": True,
+                "status_code": 503,
+                "code": "network_unreachable",
+                "message": f"Network connection to DetectifAI platform failed: {str(exc)}",
+                "latency_ms": latency,
+                "is_live_api": True,
+            }
+
