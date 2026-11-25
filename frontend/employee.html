@@ -139,13 +139,16 @@
       </p>
 
       <div style="background: var(--bg-input); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 1.25rem; max-width: 440px; margin: 0 auto 1.5rem;">
-        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Ephemeral Trust ID</div>
-        <div id="active-trust-id" style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-teal); letter-spacing: 0.05em; margin: 0.35rem 0;">
-          TRX-S-849201
+        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--accent-teal); font-weight: 700;">6-Digit Trust PIN</div>
+        <div id="active-trust-pin" style="font-size: 2.6rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-teal); letter-spacing: 0.08em; margin: 0.2rem 0;">
+          849-201
+        </div>
+        <div id="active-trust-id" style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 0.6rem;">
+          Session Reference: TRX-S-849201
         </div>
         <div style="display: flex; justify-content: center; gap: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
           <span>Expires in: <strong id="countdown-timer" style="color: #FFFFFF; font-family: var(--font-mono);">09:59</strong></span>
-          <span>Challenge PIN: <strong id="active-challenge-pin" style="color: #FFFFFF; font-family: var(--font-mono);">4928</strong></span>
+          <span>Security Code: <strong id="active-challenge-pin" style="color: #FFFFFF; font-family: var(--font-mono);">4928</strong></span>
         </div>
       </div>
 
@@ -418,9 +421,11 @@
           nav4.classList.add("active");
 
           workflowView.style.display = "none";
-          activeSessionView.style.display = "block";
-
-          activeTrustId.textContent = data.session_id;
+          const activePinElem = document.getElementById("active-trust-pin");
+          if (activePinElem) {
+            activePinElem.textContent = data.trust_pin || data.session_id.replace("TRX-S-", "");
+          }
+          activeTrustId.textContent = `Session Reference: ${data.session_id}`;
           activePin.textContent = data.challenge_code || "4928";
 
           // Start 10-minute countdown
@@ -449,18 +454,18 @@
         }
       });
 
-      // Copy Trust ID
+      // Copy Trust PIN
       document.getElementById("btn-copy-id").addEventListener("click", () => {
-        const idText = activeTrustId.textContent.trim();
-        navigator.clipboard.writeText(idText);
-        alert(`Trust ID ${idText} copied to clipboard.`);
+        const pinText = (document.getElementById("active-trust-pin")?.textContent || "").trim();
+        navigator.clipboard.writeText(pinText);
+        alert(`Trust PIN ${pinText} copied to clipboard. Share this with your caller.`);
       });
 
       // End Session
       document.getElementById("btn-end-session").addEventListener("click", async () => {
-        const sessId = activeTrustId.textContent.trim();
+        const sessText = activeTrustId.textContent.replace("Session Reference: ", "").trim();
         const fd = new FormData();
-        fd.append("session_id", sessId);
+        fd.append("session_id", sessText);
         await fetch("/api/verification/end-session", { method: "POST", body: fd });
         alert("Session ended.");
         window.location.reload();

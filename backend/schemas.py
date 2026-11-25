@@ -107,6 +107,7 @@ class SessionResponse(BaseModel):
     success: bool
     session_id: str  # TRX-S-849201
     trust_id: str  # same as session_id
+    trust_pin: Optional[str] = None  # user-friendly 6-digit code e.g. 849-201
     trust_score: float
     verdict: str  # VERIFIED, UNVERIFIED, MANUAL_REVIEW
     challenge_code: str
@@ -126,6 +127,7 @@ class CustomerLookupRequest(BaseModel):
 class CustomerLookupResponse(BaseModel):
     valid: bool
     session_id: str
+    trust_pin: Optional[str] = None
     company_name: Optional[str] = None
     company_code: Optional[str] = None
     company_approved: bool = False

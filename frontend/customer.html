@@ -45,17 +45,17 @@
       <!-- Lookup Form -->
       <form id="verify-form">
         <div class="form-group">
-          <label class="form-label" for="sess-id">Trust ID (Session Code)</label>
+          <label class="form-label" for="sess-id">6-Digit Trust PIN or Code</label>
           <input 
             type="text" 
             id="sess-id" 
             class="form-input" 
-            placeholder="e.g. TRX-S-849201" 
+            placeholder="e.g. 849-201 or 849201" 
             required 
-            style="font-family: var(--font-mono); font-weight: 600; font-size: 1.05rem;"
+            style="font-family: var(--font-mono); font-weight: 600; font-size: 1.15rem; letter-spacing: 0.05em;"
           />
-          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
-            Ask the representative on call to provide their 6-character active Trust ID.
+          <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+            Ask the representative on the call to share their 6-digit Trust PIN (e.g. <strong>849-201</strong>) or session code.
           </span>
         </div>
 
@@ -220,8 +220,8 @@
             <div class="result-header">
               <div>
                 <div class="result-title">${data.company_name || "Unknown Organization"}</div>
-                <div style="font-size: 0.85rem; color: var(--text-secondary); font-family: var(--font-mono); margin-top: 0.15rem;">
-                  Trust ID: ${data.session_id}
+                <div style="font-size: 0.9rem; color: var(--accent-teal); font-family: var(--font-mono); font-weight: 700; margin-top: 0.2rem;">
+                  Trust PIN: ${data.trust_pin || data.session_id} <span style="font-weight: 400; color: var(--text-muted); font-size: 0.75rem;">(${data.session_id})</span>
                 </div>
               </div>
               ${statusBadge}

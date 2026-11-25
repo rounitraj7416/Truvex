@@ -164,10 +164,15 @@ async def pre_call_verify(
     db.add(audit)
     db.commit()
 
+    # Format simple 6-digit PIN e.g. 849-201
+    digits_part = session_code.replace("TRX-S-", "")
+    trust_pin_formatted = f"{digits_part[:3]}-{digits_part[3:]}" if len(digits_part) >= 6 else digits_part
+
     return {
         "success": True,
         "session_id": session_code,
         "trust_id": session_code,
+        "trust_pin": trust_pin_formatted,
         "trust_score": eval_result["trust_score"],
         "verdict": eval_result["verdict"],
         "challenge_code": challenge_pin,
@@ -187,14 +192,38 @@ async def customer_lookup(payload: CustomerLookupRequest, db: Session = Depends(
     Public customer endpoint to verify caller authenticity using stored evidence (0 API credits burned).
     Validates Company ID, Employee ID, and Session ID.
     """
+    import re
     comp_input = (payload.company_id_or_code or "").strip()
     emp_input = (payload.employee_id_or_code or "").strip()
     sess_input = payload.session_id.strip()
+    
+    # Normalize session input: extract alphanumeric characters
+    clean_code = re.sub(r"[^\w]", "", sess_input.upper())
+    if not clean_code:
+        return CustomerLookupResponse(
+            valid=False,
+            session_id=sess_input,
+            status="INVALID_CREDENTIALS",
+            voice_authenticity={"passed": False, "verdict": "unknown", "score": 0.0},
+            speaker_verification={"passed": False, "decision": "no_match", "similarity": 0.0},
+            authority_verification=False,
+            session_valid=False,
+            trust_score=0.0,
+            overall_verdict="REJECTED",
+            remaining_seconds=0,
+            expires_at="",
+        )
 
-    # Find session
+    # Find session: match exact ID, or TRX-S- prefix, or 6-digit suffix, or challenge code
     session = (
         db.query(TrustSession)
-        .filter(TrustSession.session_id == sess_input)
+        .filter(
+            (TrustSession.session_id == sess_input)
+            | (TrustSession.session_id == f"TRX-S-{clean_code}")
+            | (TrustSession.session_id == clean_code)
+            | (TrustSession.challenge_code == clean_code)
+            | (TrustSession.session_id.ilike(f"%{clean_code}%"))
+        )
         .first()
     )
 
@@ -258,9 +287,13 @@ async def customer_lookup(payload: CustomerLookupRequest, db: Session = Depends(
         session.status = "EXPIRED" if session.status == "ACTIVE" else session.status
         db.commit()
 
+        digits_p = session.session_id.replace("TRX-S-", "")
+        t_pin = f"{digits_p[:3]}-{digits_p[3:]}" if len(digits_p) >= 6 else digits_p
+
         return CustomerLookupResponse(
             valid=False,
             session_id=session.session_id,
+            trust_pin=t_pin,
             company_name=comp.name,
             company_code=comp.company_code,
             company_approved=comp.status == "approved",
@@ -282,9 +315,13 @@ async def customer_lookup(payload: CustomerLookupRequest, db: Session = Depends(
             expires_at=session.expires_at.isoformat(),
         )
 
+    digits_p = session.session_id.replace("TRX-S-", "")
+    t_pin = f"{digits_p[:3]}-{digits_p[3:]}" if len(digits_p) >= 6 else digits_p
+
     return CustomerLookupResponse(
         valid=True,
         session_id=session.session_id,
+        trust_pin=t_pin,
         company_name=comp.name,
         company_code=comp.company_code,
         company_approved=comp.status == "approved",
