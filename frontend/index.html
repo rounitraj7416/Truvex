@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRUVEX — AI-Powered Universal Trust Infrastructure</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="bg-mesh"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="nav-container">
+      <a href="/" class="brand">
+        <div class="brand-logo">T</div>
+        <span class="brand-text">TRUVEX</span>
+        <span class="brand-tag">Track 03: The Trust Layer</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/static/customer.html">Verify Call</a></li>
+        <li><a href="/static/employee.html">Employee Portal</a></li>
+        <li><a href="/static/enterprise.html">Enterprise</a></li>
+        <li><a href="/static/admin.html">Platform Admin</a></li>
+        <li><a href="/static/login.html" class="btn-primary">Sign In</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero">
+      <div class="badge">
+        <span class="status-dot"></span>
+        <span id="health-indicator">Checking backend status...</span>
+      </div>
+      <h1>Verify. Connect. <span class="gradient-text">Trust.</span></h1>
+      <p>
+        AI-powered universal trust infrastructure that protects customers from synthetic voice scams and business impersonation. Verified through DetectifAI <strong>Aletheia</strong> deepfake detection and <strong>Eidos</strong> voice biometrics.
+      </p>
+
+      <!-- Trust ID Lookup Card -->
+      <div class="trust-lookup-card">
+        <label for="trust-id-input" class="lookup-label">Enter Received Trust ID</label>
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="trust-id-input" 
+            class="trust-input" 
+            placeholder="e.g. TRX-9481-2849" 
+            maxlength="16"
+            autocomplete="off"
+          />
+          <button class="btn-primary" onclick="alert('Trust ID lookup active in Phase 2!')">Verify Session</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Five-Layer Trust Engine Features -->
+    <section class="features-container">
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <h3>1. Business Verification</h3>
+        <p>Vetting and manual administrative approval of participating institutions, eliminating fake corporate entities.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🪪</div>
+        <h3>2. Employee Identity</h3>
+        <p>Real-time corporate directory binding ensuring only active, verified personnel can request communication sessions.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>3. Voice Authenticity</h3>
+        <p>Powered by DetectifAI <strong>Aletheia</strong> to detect deepfake synthesis, voice cloning, and AI voice conversions in real-time.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎙️</div>
+        <h3>4. Speaker Biometrics</h3>
+        <p>Powered by DetectifAI <strong>Eidos</strong> voice verification matching the caller against their enrolled biometric profile.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>5. Session Trust ID</h3>
+        <p>Short-lived, single-use cryptographic tokens (5–10 min TTL) preventing replay attacks and man-in-the-middle impersonation.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>B2B2C Out-of-Band</h3>
+        <p>Completely independent of vulnerable carrier caller-ID signaling. Customers verify with zero app installation required.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>TRUVEX Platform &copy; 2026 &mdash; Built for CMRIT × DetectifAI Hackathon (Track 03: The Trust Layer)</p>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
