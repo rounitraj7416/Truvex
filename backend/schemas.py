@@ -118,8 +118,8 @@ class SessionResponse(BaseModel):
 
 # Customer Lookup
 class CustomerLookupRequest(BaseModel):
-    company_id_or_code: str
-    employee_id_or_code: str
+    company_id_or_code: Optional[str] = ""
+    employee_id_or_code: Optional[str] = ""
     session_id: str
 
 
@@ -175,3 +175,23 @@ class PlatformStatsResponse(BaseModel):
     total_fraud_reports: int
     detectif_configured: bool
     detectif_mock_fallback: bool
+
+
+# Phone Lookup
+class PhoneLookupRequest(BaseModel):
+    country_code: str = "+1"
+    phone_number: str = Field(..., min_length=3, max_length=30)
+
+
+class PhoneLookupResponse(BaseModel):
+    status: str  # REGISTERED_BUSINESS, UNREGISTERED, ACTIVE_SESSION_FOUND, SUSPICIOUS_FLAGGED, UNAVAILABLE
+    phone_number: str
+    formatted_phone: str
+    is_registered_business: bool
+    company_name: Optional[str] = None
+    company_code: Optional[str] = None
+    company_industry: Optional[str] = None
+    active_sessions_count: int = 0
+    fraud_reports_count: int = 0
+    security_notice: str
+

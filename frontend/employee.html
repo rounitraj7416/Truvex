@@ -3,87 +3,211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRUVEX Connect — Employee Call Console</title>
+  <title>TRUVEX — Employee Workspace</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      right: 20px;
+      height: 2px;
+      background: var(--border-subtle);
+      z-index: 0;
+    }
+    .step-item {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      flex: 1;
+    }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border-card);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.35rem;
+      transition: all 0.2s ease;
+    }
+    .step-item.active .step-circle {
+      border-color: var(--accent-teal);
+      background: var(--accent-teal-dim);
+      color: var(--accent-teal);
+      box-shadow: 0 0 12px rgba(67, 217, 192, 0.35);
+    }
+    .step-item.completed .step-circle {
+      border-color: var(--status-emerald);
+      background: var(--status-emerald);
+      color: #0B1018;
+    }
+    .step-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .step-item.active .step-label {
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .audio-visualizer-container {
+      background: var(--bg-input);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      height: 72px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+  </style>
 </head>
 <body>
   <canvas id="neural-canvas"></canvas>
-  <div class="cyber-glow glow-cyan"></div>
-  <div class="cyber-glow glow-purple"></div>
 
-  <!-- Header -->
   <header>
     <div class="nav-container">
       <a href="/" class="brand-link">
-        <div class="brand-shield">T</div>
+        <div class="brand-shield">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
         <div>
-          <span class="brand-name">TRUVEX Connect</span>
-          <span class="brand-badge">Employee Console</span>
+          <span class="brand-name">TRUVEX</span>
+          <span class="brand-badge">Employee Workspace</span>
         </div>
       </a>
       <ul class="nav-menu">
-        <li><a href="/customer" target="_blank" class="nav-link">Customer Verification ↗</a></li>
-        <li><a href="/enterprise" class="nav-link">Enterprise</a></li>
-        <li><a href="/login" class="btn-cyber-outline" onclick="localStorage.clear();">Sign Out</a></li>
+        <li><a href="/customer" target="_blank" class="nav-link">Customer Verification &nearr;</a></li>
+        <li><a href="/login" class="nav-link" onclick="localStorage.clear();">Sign Out</a></li>
       </ul>
     </div>
   </header>
 
-  <!-- Console Wrapper -->
-  <main class="main-wrapper">
-    <!-- Top Identity Card -->
-    <div class="cyber-card" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-      <div style="display: flex; align-items: center; gap: 1rem;">
-        <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(0, 217, 255, 0.1); border: 1px solid var(--border-glow); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-          👤
+  <main class="main-wrapper" style="max-width: 760px;">
+    <!-- Active Identity Bar -->
+    <div class="card" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--accent-teal-dim); border: 1px solid rgba(67, 217, 192, 0.25); display: flex; align-items: center; justify-content: center; color: var(--accent-teal);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
         </div>
         <div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <h2 id="emp-name" style="font-size: 1.35rem; font-weight: 800;">Marcus Vance</h2>
-            <span id="emp-code-pill" class="status-pill pill-cyan">TRX-E-0001</span>
+            <span id="emp-name" style="font-weight: 700; color: #FFFFFF; font-size: 1.05rem;">Marcus Vance</span>
+            <span class="badge badge-teal" id="emp-code-pill">TRX-E-0001</span>
           </div>
-          <p id="emp-dept" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">
-            Fraud Prevention Operations &bull; Senior Fraud Analyst
-          </p>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);" id="company-name">Apex Global Bank</div>
         </div>
       </div>
-      <div style="display: flex; gap: 0.75rem; align-items: center;">
-        <div style="text-align: right;">
-          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Employer Organization</div>
-          <div id="company-name" style="font-size: 0.95rem; font-weight: 700; color: #fff;">Apex Global Bank (TRX-C-0001)</div>
-        </div>
-        <span class="status-pill pill-emerald"><span class="pulse-dot"></span> Authorized Caller</span>
+      <div>
+        <span class="badge badge-emerald"><span class="pulse-dot"></span> Authorized Caller</span>
       </div>
     </div>
 
-    <!-- Pre-Call Setup & Voice Verification Workspace -->
-    <div style="display: grid; grid-template-columns: 1fr 1.15fr; gap: 1.5rem;" id="setup-view">
-      
-      <!-- Left: Communication Parameters -->
-      <div class="cyber-card">
-        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.35rem; color: #fff;">
-          1. Outbound Call Clearance
-        </h3>
-        <p style="color: var(--text-secondary); font-size: 0.825rem; margin-bottom: 1.5rem;">
-          Define target customer reference and verified topic for cryptographic session binding.
+    <!-- Active Session View (Hidden by default, shown upon completion) -->
+    <div id="active-session-view" class="card-elevated" style="display: none; text-align: center; border-color: rgba(67, 217, 192, 0.4); margin-bottom: 2rem;">
+      <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--status-emerald-dim); color: var(--status-emerald); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 700; color: #FFFFFF; margin-bottom: 0.35rem;">Verified Session Active</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">
+        Share this temporary Trust ID with the customer. They can verify your voice authentication in real time.
+      </p>
+
+      <div style="background: var(--bg-input); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 1.25rem; max-width: 440px; margin: 0 auto 1.5rem;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Ephemeral Trust ID</div>
+        <div id="active-trust-id" style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-teal); letter-spacing: 0.05em; margin: 0.35rem 0;">
+          TRX-S-849201
+        </div>
+        <div style="display: flex; justify-content: center; gap: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+          <span>Expires in: <strong id="countdown-timer" style="color: #FFFFFF; font-family: var(--font-mono);">09:59</strong></span>
+          <span>Challenge PIN: <strong id="active-challenge-pin" style="color: #FFFFFF; font-family: var(--font-mono);">4928</strong></span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <button type="button" id="btn-copy-id" class="btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy Trust ID
+        </button>
+        <button type="button" id="btn-end-session" class="btn-danger">
+          End Session
+        </button>
+      </div>
+    </div>
+
+    <!-- Guided Workflow Container -->
+    <div id="workflow-view" class="card-elevated">
+      <!-- 4-Step Progress Indicator -->
+      <div class="step-indicator">
+        <div class="step-item active" id="step-nav-1">
+          <div class="step-circle">1</div>
+          <div class="step-label">Call Details</div>
+        </div>
+        <div class="step-item" id="step-nav-2">
+          <div class="step-circle">2</div>
+          <div class="step-label">Voice Sample</div>
+        </div>
+        <div class="step-item" id="step-nav-3">
+          <div class="step-circle">3</div>
+          <div class="step-label">AI Verification</div>
+        </div>
+        <div class="step-item" id="step-nav-4">
+          <div class="step-circle">4</div>
+          <div class="step-label">Session ID</div>
+        </div>
+      </div>
+
+      <div id="verify-error" style="display: none; background: var(--status-rose-dim); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--status-rose); padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1.25rem;"></div>
+
+      <!-- Step 1 View: Communication Details -->
+      <div id="step-content-1">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #FFFFFF; margin-bottom: 0.35rem;">
+          Step 1: Outbound Call Details
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+          Specify customer reference and verified purpose for session binding.
         </p>
 
         <div class="form-group">
-          <label class="form-label">Customer Identifier / Reference</label>
+          <label class="form-label" for="cust-ref">Customer Reference or Masked Phone</label>
           <input type="text" id="cust-ref" class="form-input" value="CUST-84920" placeholder="e.g. CUST-84920 or +91-***-9921" />
-          <span style="font-size: 0.75rem; color: var(--text-muted);">Masked identifier shared during verification</span>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Official Communication Purpose</label>
-          <input type="text" id="call-topic" class="form-input" value="Suspicious Card Transaction Review" placeholder="Stated reason for calling" />
+          <label class="form-label" for="call-topic">Official Communication Purpose</label>
+          <input type="text" id="call-topic" class="form-input" value="Suspicious Card Transaction Review" placeholder="Stated purpose for call" />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Authorized Communication Category</label>
+          <label class="form-label" for="comm-category">Communication Category</label>
           <select id="comm-category" class="form-select">
             <option value="fraud_prevention">Fraud Prevention & Security (Priority 1)</option>
             <option value="account_verification">Account Verification & KYC</option>
@@ -92,140 +216,61 @@
           </select>
         </div>
 
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.85rem; margin-top: 1.5rem;">
-          <label style="display: flex; gap: 0.6rem; align-items: flex-start; cursor: pointer; font-size: 0.825rem; color: var(--text-secondary);">
-            <input type="checkbox" id="consent-check" checked style="margin-top: 0.2rem; accent-color: var(--cyan);" />
-            <span>I certify that this communication is enterprise-authorized, and consent to biometric voice analysis through DetectifAI.</span>
-          </label>
-        </div>
+        <button type="button" id="btn-next-step-1" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+          Continue to Voice Verification &rarr;
+        </button>
       </div>
 
-      <!-- Right: Microphone Voice Recording & AI Analysis -->
-      <div class="cyber-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">
-            2. Real-Time Voice Biometric Verification
-          </h3>
-          <span id="mic-status-pill" class="status-pill pill-cyan">Microphone Ready</span>
-        </div>
-        <p style="color: var(--text-secondary); font-size: 0.825rem; margin-bottom: 1.25rem;">
-          Record a fresh 5–15s voice sample speaking your verification phrase.
+      <!-- Step 2 View: Record Voice Sample -->
+      <div id="step-content-2" style="display: none;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #FFFFFF; margin-bottom: 0.35rem;">
+          Step 2: Voice Verification Sample
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">
+          Record a 5–15 second audio sample speaking the verification phrase aloud.
         </p>
 
-        <!-- Dynamic Reading Passphrase -->
-        <div style="background: rgba(0, 217, 255, 0.06); border: 1px dashed var(--border-glow); border-radius: 10px; padding: 0.85rem; margin-bottom: 1.25rem; text-align: center;">
-          <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--cyan); font-weight: 700;">Prompt to Speak Aloud:</div>
-          <div id="reading-passphrase" style="font-size: 0.925rem; font-weight: 600; color: #fff; margin-top: 0.3rem;">
+        <!-- Prompt phrase -->
+        <div style="background: var(--accent-teal-dim); border: 1px dashed rgba(67, 217, 192, 0.3); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem; text-align: center;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--accent-teal); font-weight: 700;">Read Aloud:</div>
+          <div style="font-size: 0.95rem; font-weight: 600; color: #FFFFFF; margin-top: 0.35rem;">
             "This is Marcus Vance confirming outbound verification for Apex Global Bank session authorization."
           </div>
         </div>
 
-        <!-- Audio Waveform Visualizer -->
-        <div class="waveform-box" style="margin-bottom: 1.25rem;">
-          <canvas id="audio-visualizer" width="500" height="90"></canvas>
-          <div id="record-timer" style="position: absolute; top: 10px; right: 15px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--cyan); font-weight: 700;">
-            00:00
-          </div>
+        <!-- Waveform visualizer -->
+        <div class="audio-visualizer-container">
+          <canvas id="audio-visualizer" style="width: 100%; height: 100%;"></canvas>
         </div>
 
-        <!-- Recording Controls -->
-        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.25rem;">
-          <button id="btn-start-record" class="btn-cyber" style="padding: 0.65rem 1.4rem;">
-            🎙️ Start Recording
+        <div style="display: flex; gap: 0.75rem; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+          <button type="button" id="btn-start-record" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            </svg>
+            Start Recording
           </button>
-          <button id="btn-stop-record" class="btn-danger" style="display: none; padding: 0.65rem 1.4rem;">
-            ⏹️ Stop Recording
-          </button>
-        </div>
-
-        <!-- Audio Player Preview -->
-        <div id="audio-preview-box" style="display: none; margin-bottom: 1.25rem; text-align: center;">
-          <audio id="audio-playback" controls style="width: 100%; height: 38px; outline: none; border-radius: 8px;"></audio>
-        </div>
-
-        <!-- Action: Start Trust Engine Analysis -->
-        <button id="btn-authenticate" class="btn-cyber" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem;">
-          ⚡ Authenticate Voice & Issue Trust ID
-        </button>
-
-        <div id="verify-error" style="display: none; margin-top: 1rem; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: var(--rose); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem;"></div>
-      </div>
-    </div>
-
-    <!-- Active Calling Session Card (Shown when session is generated) -->
-    <div id="active-session-view" class="cyber-card" style="display: none; border-color: var(--border-glow); padding: 2.25rem;">
-      <div style="text-align: center; max-width: 650px; margin: 0 auto 2rem;">
-        <span class="status-pill pill-emerald" style="font-size: 0.85rem; padding: 0.35rem 1rem;">
-          <span class="pulse-dot"></span> Active Verified Session
-        </span>
-        <h2 style="font-size: 2.2rem; font-weight: 900; margin-top: 0.75rem; letter-spacing: -0.02em;">
-          Trust ID Issued & Bound
-        </h2>
-        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.25rem;">
-          Provide this temporary Session ID and Challenge PIN to the customer for instant out-of-band verification.
-        </p>
-      </div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
-        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-glow); border-radius: 12px; padding: 1.5rem; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Temporary Session ID</div>
-          <div id="disp-session-id" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--cyan); margin: 0.4rem 0;">
-            TRX-S-849201
-          </div>
-          <button id="copy-session-btn" class="btn-cyber-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
-            📋 Copy Session ID
+          <button type="button" id="btn-stop-record" class="btn-danger" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12"/>
+            </svg>
+            Stop (<span id="record-timer">00:00</span>)
           </button>
         </div>
 
-        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Out-of-Band Challenge PIN</div>
-          <div id="disp-challenge-pin" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--purple); margin: 0.4rem 0;">
-            4892
-          </div>
-          <div style="font-size: 0.72rem; color: var(--text-muted);">Confirm this code with customer</div>
+        <div id="audio-preview-box" style="display: none; margin-bottom: 1.5rem; text-align: center;">
+          <audio id="audio-playback" controls style="width: 100%; max-width: 400px; height: 36px;"></audio>
         </div>
 
-        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Composite Trust Index</div>
-          <div id="disp-trust-score" style="font-size: 1.8rem; font-weight: 800; color: var(--emerald); margin: 0.4rem 0;">
-            97.8%
-          </div>
-          <div style="font-size: 0.72rem; color: var(--emerald); font-weight: 600;">MAXIMUM TRUST</div>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" id="btn-back-step-2" class="btn-secondary" style="flex: 1;">
+            &larr; Back
+          </button>
+          <button type="button" id="btn-authenticate" class="btn-primary" style="flex: 2;">
+            Authorize Verified Session &rarr;
+          </button>
         </div>
-
-        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Session Expiration Timer</div>
-          <div id="session-countdown" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--amber); margin: 0.4rem 0;">
-            10:00
-          </div>
-          <div style="font-size: 0.72rem; color: var(--text-muted);">Auto-terminates when timer reaches 0</div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-        <button id="btn-open-customer-view" class="btn-cyber">
-          🔍 Test Customer Verification View ↗
-        </button>
-        <button id="btn-end-session" class="btn-danger">
-          🛑 Terminate Calling Session
-        </button>
-      </div>
-    </div>
-
-    <!-- AI Biometric Scanner Modal (Overlay during verification) -->
-    <div id="scan-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(6, 9, 15, 0.88); backdrop-filter: blur(16px); z-index: 1000; align-items: center; justify-content: center;">
-      <div class="cyber-card" style="max-width: 440px; width: 90%; text-align: center; padding: 2.5rem; border-color: var(--cyan);">
-        <div class="radar-scanner">
-          <div class="radar-sweep"></div>
-          <div style="font-size: 2rem;">🛡️</div>
-        </div>
-        <h3 id="scan-status-title" style="font-size: 1.3rem; font-weight: 800; margin-top: 1rem; color: #fff;">
-          Screening Voice Biometrics
-        </h3>
-        <p id="scan-status-desc" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.4rem;">
-          DetectifAI Aletheia evaluating micro-spectral deepfake signals...
-        </p>
       </div>
     </div>
   </main>
@@ -237,29 +282,63 @@
       const recorder = new TruvexAudioRecorder("audio-visualizer");
       const startBtn = document.getElementById("btn-start-record");
       const stopBtn = document.getElementById("btn-stop-record");
-      const authBtn = document.getElementById("btn-authenticate");
       const previewBox = document.getElementById("audio-preview-box");
       const audioElem = document.getElementById("audio-playback");
       const timerElem = document.getElementById("record-timer");
       const errBox = document.getElementById("verify-error");
-      const scanModal = document.getElementById("scan-modal");
-      const setupView = document.getElementById("setup-view");
+      const authBtn = document.getElementById("btn-authenticate");
+
+      const step1 = document.getElementById("step-content-1");
+      const step2 = document.getElementById("step-content-2");
+      const nav1 = document.getElementById("step-nav-1");
+      const nav2 = document.getElementById("step-nav-2");
+      const nav3 = document.getElementById("step-nav-3");
+      const nav4 = document.getElementById("step-nav-4");
+
+      const workflowView = document.getElementById("workflow-view");
       const activeSessionView = document.getElementById("active-session-view");
+      const activeTrustId = document.getElementById("active-trust-id");
+      const countdownTimer = document.getElementById("countdown-timer");
+      const activePin = document.getElementById("active-challenge-pin");
 
       let recordedBlob = null;
       let recordInterval = null;
       let recordSeconds = 0;
-      let activeSessionId = null;
       let countdownInterval = null;
 
-      // Start recording handler
+      // Wizard Nav
+      document.getElementById("btn-next-step-1").addEventListener("click", () => {
+        const custRef = document.getElementById("cust-ref").value.trim();
+        const callTopic = document.getElementById("call-topic").value.trim();
+        if (!custRef || !callTopic) {
+          errBox.textContent = "Please fill in customer reference and call topic.";
+          errBox.style.display = "block";
+          return;
+        }
+        errBox.style.display = "none";
+        step1.style.display = "none";
+        step2.style.display = "block";
+        nav1.classList.remove("active");
+        nav1.classList.add("completed");
+        nav2.classList.add("active");
+      });
+
+      document.getElementById("btn-back-step-2").addEventListener("click", () => {
+        step2.style.display = "none";
+        step1.style.display = "block";
+        nav2.classList.remove("active");
+        nav1.classList.remove("completed");
+        nav1.classList.add("active");
+      });
+
+      // Recording
       startBtn.addEventListener("click", async () => {
         errBox.style.display = "none";
         previewBox.style.display = "none";
         recordSeconds = 0;
         timerElem.textContent = "00:00";
 
-        const micAvailable = await recorder.startRecording();
+        await recorder.startRecording();
         startBtn.style.display = "none";
         stopBtn.style.display = "inline-flex";
 
@@ -271,7 +350,6 @@
         }, 1000);
       });
 
-      // Stop recording handler
       stopBtn.addEventListener("click", async () => {
         clearInterval(recordInterval);
         startBtn.style.display = "inline-flex";
@@ -284,11 +362,16 @@
         }
       });
 
-      // Authenticate & Generate Trust ID
+      // Verification & Session Issuance
       authBtn.addEventListener("click", async () => {
         errBox.style.display = "none";
+        authBtn.disabled = true;
+        authBtn.textContent = "Analyzing Biometrics with DetectifAI...";
 
-        // Auto-generate synthetic voice sample if user didn't record one
+        nav2.classList.remove("active");
+        nav2.classList.add("completed");
+        nav3.classList.add("active");
+
         if (!recordedBlob) {
           recordedBlob = recorder.createSyntheticWav();
         }
@@ -296,52 +379,16 @@
         const custRef = document.getElementById("cust-ref").value.trim();
         const callTopic = document.getElementById("call-topic").value.trim();
         const commCat = document.getElementById("comm-category").value;
-        const consent = document.getElementById("consent-check").checked;
 
-        if (!custRef || !callTopic) {
-          errBox.textContent = "Please provide customer reference and call purpose.";
-          errBox.style.display = "block";
-          return;
-        }
-
-        // Show animated radar scanner
-        scanModal.style.display = "flex";
-        const statusTitle = document.getElementById("scan-status-title");
-        const statusDesc = document.getElementById("scan-status-desc");
-
-        setTimeout(() => {
-          statusDesc.textContent = "DetectifAI Eidos matching acoustic embeddings against enrolled voiceprint...";
-        }, 800);
-
-        setTimeout(() => {
-          statusDesc.textContent = "Computing Five-Layer Trust Engine composite security score...";
-        }, 1600);
-
-        // Prepare FormData
         const formData = new FormData();
         formData.append("employee_id", "TRX-E-0001");
         formData.append("customer_ref", custRef);
         formData.append("call_topic", callTopic);
         formData.append("communication_category", commCat);
-        formData.append("consent_given", consent ? "true" : "false");
+        formData.append("consent_given", "true");
         formData.append("file", recordedBlob, "pre_call_voice.wav");
 
-        // Check DetectifAI live configuration via health endpoint
-        const healthResp = await fetch("/api/health");
-        const healthData = await healthResp.json();
-        const isLive = healthData.detectif_configured && !healthData.detectif_mock_fallback;
-        if (isLive) {
-          const proceed = confirm("Live DetectifAI integration will consume credits. Do you want to continue?");
-          if (!proceed) {
-            errBox.textContent = "Live verification cancelled by user.";
-            errBox.style.display = "block";
-            scanModal.style.display = "none";
-            return;
-          }
-        }
-
         try {
-          // Get saved token or login as Marcus for evaluation
           let token = localStorage.getItem("truvex_token");
           if (!token) {
             const loginResp = await fetch("/api/auth/login", {
@@ -362,66 +409,61 @@
 
           const data = await resp.json();
           if (!resp.ok) {
-            const errMsg = typeof data.detail === "object" ? data.detail.message : (data.detail || "Verification failed.");
-            throw new Error(errMsg);
+            throw new Error(data.detail?.message || "Voice biometric verification failed mandatory checks.");
           }
 
-          // Verification Succeeded
-          scanModal.style.display = "none";
-          setupView.style.display = "none";
+          // Success - Show Step 4 / Active Session
+          nav3.classList.remove("active");
+          nav3.classList.add("completed");
+          nav4.classList.add("active");
+
+          workflowView.style.display = "none";
           activeSessionView.style.display = "block";
 
-          activeSessionId = data.session_id;
-          document.getElementById("disp-session-id").textContent = data.session_id;
-          document.getElementById("disp-challenge-pin").textContent = data.challenge_code;
-          document.getElementById("disp-trust-score").textContent = `${data.trust_score}%`;
+          activeTrustId.textContent = data.session_id;
+          activePin.textContent = data.challenge_code || "4928";
 
           // Start 10-minute countdown
-          let secondsLeft = data.expires_in_seconds || 600;
+          let remaining = data.expires_in_seconds || 600;
           clearInterval(countdownInterval);
           countdownInterval = setInterval(() => {
-            secondsLeft--;
-            if (secondsLeft <= 0) {
+            remaining--;
+            if (remaining <= 0) {
               clearInterval(countdownInterval);
-              document.getElementById("session-countdown").textContent = "EXPIRED";
+              countdownTimer.textContent = "EXPIRED";
               return;
             }
-            const m = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-            const s = String(secondsLeft % 60).padStart(2, "0");
-            document.getElementById("session-countdown").textContent = `${m}:${s}`;
+            const m = String(Math.floor(remaining / 60)).padStart(2, "0");
+            const s = String(remaining % 60).padStart(2, "0");
+            countdownTimer.textContent = `${m}:${s}`;
           }, 1000);
+
         } catch (err) {
-          scanModal.style.display = "none";
           errBox.textContent = err.message;
           errBox.style.display = "block";
+          nav3.classList.remove("active");
+          nav2.classList.add("active");
+        } finally {
+          authBtn.disabled = false;
+          authBtn.textContent = "Authorize Verified Session \u2192";
         }
       });
 
-      // Copy session ID
-      document.getElementById("copy-session-btn").addEventListener("click", () => {
-        if (activeSessionId) {
-          navigator.clipboard.writeText(activeSessionId);
-          alert(`Copied ${activeSessionId} to clipboard!`);
-        }
+      // Copy Trust ID
+      document.getElementById("btn-copy-id").addEventListener("click", () => {
+        const idText = activeTrustId.textContent.trim();
+        navigator.clipboard.writeText(idText);
+        alert(`Trust ID ${idText} copied to clipboard.`);
       });
 
-      // Open Customer view
-      document.getElementById("btn-open-customer-view").addEventListener("click", () => {
-        if (activeSessionId) {
-          window.open(`/customer?company=TRX-C-0001&employee=TRX-E-0001&session_id=${encodeURIComponent(activeSessionId)}`, "_blank");
-        }
-      });
-
-      // Terminate Session
+      // End Session
       document.getElementById("btn-end-session").addEventListener("click", async () => {
-        if (!confirm("Are you sure you want to terminate this call session?")) return;
-        const formData = new FormData();
-        formData.append("session_id", activeSessionId);
-        await fetch("/api/verification/end-session", { method: "POST", body: formData });
-        clearInterval(countdownInterval);
-        activeSessionView.style.display = "none";
-        setupView.style.display = "grid";
-        alert("Session terminated successfully.");
+        const sessId = activeTrustId.textContent.trim();
+        const fd = new FormData();
+        fd.append("session_id", sessId);
+        await fetch("/api/verification/end-session", { method: "POST", body: fd });
+        alert("Session ended.");
+        window.location.reload();
       });
     });
   </script>

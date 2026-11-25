@@ -14,21 +14,24 @@
   <div class="cyber-glow glow-cyan"></div>
   <div class="cyber-glow glow-purple"></div>
 
-  <!-- Header -->
   <header>
     <div class="nav-container">
       <a href="/" class="brand-link">
-        <div class="brand-shield" style="background: linear-gradient(135deg, var(--amber), #ef4444);">⚙️</div>
+        <div class="brand-shield">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
         <div>
-          <span class="brand-name">TRUVEX Control</span>
-          <span class="brand-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.4);">Root Admin</span>
+          <span class="brand-name">TRUVEX</span>
+          <span class="brand-badge" style="color: var(--status-amber); background: var(--status-amber-dim); border-color: rgba(245, 158, 11, 0.3);">Platform Control</span>
         </div>
       </a>
       <ul class="nav-menu">
-        <li><a href="/enterprise" class="nav-link">Enterprise Portal</a></li>
-        <li><a href="/employee" class="nav-link">Employee Console</a></li>
-        <li><a href="/customer" class="nav-link">Customer Verification</a></li>
-        <li><a href="/login" class="btn-cyber-outline" onclick="localStorage.clear();">Sign Out</a></li>
+        <li><a href="/enterprise" class="nav-link">Business</a></li>
+        <li><a href="/employee" class="nav-link">Employee</a></li>
+        <li><a href="/customer" class="nav-link">Verification</a></li>
+        <li><a href="/login" class="nav-link" onclick="localStorage.clear();">Sign Out</a></li>
       </ul>
     </div>
   </header>

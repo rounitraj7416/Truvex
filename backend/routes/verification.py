@@ -17,6 +17,8 @@ from backend.schemas import (
     CustomerLookupRequest,
     CustomerLookupResponse,
     FraudReportCreate,
+    PhoneLookupRequest,
+    PhoneLookupResponse,
     SessionResponse,
 )
 from backend.services.aletheia import AletheiaClient
@@ -185,23 +187,9 @@ async def customer_lookup(payload: CustomerLookupRequest, db: Session = Depends(
     Public customer endpoint to verify caller authenticity using stored evidence (0 API credits burned).
     Validates Company ID, Employee ID, and Session ID.
     """
-    comp_input = payload.company_id_or_code.strip()
-    emp_input = payload.employee_id_or_code.strip()
+    comp_input = (payload.company_id_or_code or "").strip()
+    emp_input = (payload.employee_id_or_code or "").strip()
     sess_input = payload.session_id.strip()
-
-    # Find company
-    comp = (
-        db.query(Company)
-        .filter((Company.company_code == comp_input) | (Company.id == comp_input))
-        .first()
-    )
-
-    # Find employee
-    emp = (
-        db.query(Employee)
-        .filter((Employee.employee_code == emp_input) | (Employee.id == emp_input))
-        .first()
-    )
 
     # Find session
     session = (
@@ -209,6 +197,30 @@ async def customer_lookup(payload: CustomerLookupRequest, db: Session = Depends(
         .filter(TrustSession.session_id == sess_input)
         .first()
     )
+
+    # Find company (from input or from session if input omitted)
+    if comp_input:
+        comp = (
+            db.query(Company)
+            .filter((Company.company_code == comp_input) | (Company.id == comp_input))
+            .first()
+        )
+    elif session:
+        comp = session.company
+    else:
+        comp = None
+
+    # Find employee (from input or from session if input omitted)
+    if emp_input:
+        emp = (
+            db.query(Employee)
+            .filter((Employee.employee_code == emp_input) | (Employee.id == emp_input))
+            .first()
+        )
+    elif session:
+        emp = session.employee
+    else:
+        emp = None
 
     # Base failure response structure
     if not session or not comp or not emp or session.employee_id != emp.id or session.company_id != comp.id:
@@ -302,6 +314,90 @@ async def customer_lookup(payload: CustomerLookupRequest, db: Session = Depends(
         challenge_code=session.challenge_code,
         remaining_seconds=remaining,
         expires_at=session.expires_at.isoformat(),
+    )
+
+
+@router.post("/phone-lookup", response_model=PhoneLookupResponse)
+async def phone_lookup(payload: PhoneLookupRequest, db: Session = Depends(get_db)):
+    """
+    Public caller phone lookup.
+    Checks phone numbers against accredited businesses, active calling sessions, and fraud reports.
+    Always includes an explicit security disclaimer that phone numbers can be spoofed.
+    """
+    import re
+    raw_phone = payload.phone_number.strip()
+    country_code = payload.country_code.strip()
+    digits_only = re.sub(r"[^\d]", "", raw_phone)
+    full_phone = f"{country_code} {raw_phone}".strip()
+
+    # 1. Check for fraud reports
+    fraud_reports_count = (
+        db.query(FraudReport)
+        .filter(FraudReport.caller_phone.isnot(None))
+        .filter(FraudReport.caller_phone.contains(digits_only) if digits_only else False)
+        .count()
+        if digits_only
+        else 0
+    )
+
+    if fraud_reports_count > 0:
+        return PhoneLookupResponse(
+            status="SUSPICIOUS_FLAGGED",
+            phone_number=raw_phone,
+            formatted_phone=full_phone,
+            is_registered_business=False,
+            company_name=None,
+            company_code=None,
+            company_industry=None,
+            active_sessions_count=0,
+            fraud_reports_count=fraud_reports_count,
+            security_notice="WARNING: This number has been reported in suspicious or fraudulent calling activity. Do not share OTPs, passwords, or personal credentials.",
+        )
+
+    # 2. Check accredited registered companies
+    companies = db.query(Company).filter(Company.status == "approved").all()
+    matched_company = None
+    for comp in companies:
+        comp_digits = re.sub(r"[^\d]", "", comp.support_contact or "")
+        if (digits_only and comp_digits and (digits_only in comp_digits or comp_digits in digits_only)) or (raw_phone.lower() in (comp.support_contact or "").lower()):
+            matched_company = comp
+            break
+
+    if matched_company:
+        # Check if there are active sessions for this company
+        active_sessions = (
+            db.query(TrustSession)
+            .filter(TrustSession.company_id == matched_company.id)
+            .filter(TrustSession.status == "ACTIVE")
+            .count()
+        )
+        status_val = "ACTIVE_SESSION_FOUND" if active_sessions > 0 else "REGISTERED_BUSINESS"
+
+        return PhoneLookupResponse(
+            status=status_val,
+            phone_number=raw_phone,
+            formatted_phone=full_phone,
+            is_registered_business=True,
+            company_name=matched_company.name,
+            company_code=matched_company.company_code,
+            company_industry=matched_company.industry,
+            active_sessions_count=active_sessions,
+            fraud_reports_count=0,
+            security_notice="Registered Business Number. Caution: Incoming caller IDs can be spoofed by scammers using VoIP. Always verify the caller's Trust ID before disclosing sensitive information.",
+        )
+
+    # 3. Unregistered
+    return PhoneLookupResponse(
+        status="UNREGISTERED",
+        phone_number=raw_phone,
+        formatted_phone=full_phone,
+        is_registered_business=False,
+        company_name=None,
+        company_code=None,
+        company_industry=None,
+        active_sessions_count=0,
+        fraud_reports_count=0,
+        security_notice="Unregistered Number. This number is not registered in the TRUVEX accredited trust registry. Never rely solely on caller ID.",
     )
 
 
