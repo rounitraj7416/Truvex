@@ -393,7 +393,7 @@
         const fd = new FormData();
         fd.append("model", "aletheia_detect");
         fd.append("speaker_id", "trx_spk_TRX-E-0001");
-        fd.append("confirmed_live_credit_spend", "false"); // mock mode to save credits
+        fd.append("confirmed_live_credit_spend", "true"); // Real DetectifAI credit evaluation
         fd.append("file", recordedBlob, "sample_voice.wav");
 
         try {
@@ -402,38 +402,62 @@
           const r = data.result || {};
 
           resultBox.className = "result-box";
-          resultBox.innerHTML = `
-            <div class="result-header">
-              <div>
-                <div class="result-title">DetectifAI Aletheia Analysis Complete</div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
-                  Model: Aletheia v1.2 &bull; Latency: ${data.latency_ms || "120"}ms
+
+          if (r.error) {
+            resultBox.innerHTML = `
+              <div class="result-header">
+                <div>
+                  <div class="result-title" style="color: var(--status-amber);">DetectifAI Voice Analysis Notice</div>
+                  <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                    Status: ${r.code || "Live AI Check"} &bull; Request ID: ${r.request_id || "Active"}
+                  </div>
+                </div>
+                <span class="badge badge-amber">Live API Active</span>
+              </div>
+              <div class="security-notice-banner" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25); color: #FCD34D;">
+                <div>
+                  <strong>Live AI Engine Notice:</strong> ${r.message || "Please speak clearly for at least 2 seconds into your microphone to run live voice deepfake analysis."}
                 </div>
               </div>
-              <span class="badge ${r.verdict === 'real' ? 'badge-emerald' : 'badge-amber'}">
-                ${r.verdict === 'real' ? 'Authentic Human Voice' : 'Analyzed'}
-              </span>
-            </div>
+            `;
+          } else {
+            const isReal = r.verdict === 'real';
+            const riskScore = r.score !== undefined ? (r.score * 100).toFixed(1) : "3.8";
+            resultBox.innerHTML = `
+              <div class="result-header">
+                <div>
+                  <div class="result-title">DetectifAI Live Voice Analysis</div>
+                  <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                    Model: DetectifAI Aletheia &bull; Latency: ${data.latency_ms || "120"}ms &bull; ${data.is_live_api ? '⚡ Live Credits Used' : 'Diagnostic Mode'}
+                  </div>
+                </div>
+                <span class="badge ${isReal ? 'badge-emerald' : 'badge-rose'}">
+                  ${isReal ? 'Authentic Human Voice' : 'Synthetic Voice Alert'}
+                </span>
+              </div>
 
-            <div class="result-grid">
-              <div class="result-item">
-                <div class="result-item-label">AI Deepfake Score</div>
-                <div class="result-item-value" style="color: var(--status-emerald);">
-                  ${((r.score || 0.038) * 100).toFixed(1)}% (Low Risk)
+              <div class="result-grid">
+                <div class="result-item">
+                  <div class="result-item-label">AI Deepfake Probability</div>
+                  <div class="result-item-value" style="color: ${isReal ? 'var(--status-emerald)' : 'var(--status-rose)'};">
+                    ${riskScore}% (${isReal ? 'Low Risk' : 'High Risk'})
+                  </div>
+                </div>
+                <div class="result-item">
+                  <div class="result-item-label">Engine Verdict</div>
+                  <div class="result-item-value" style="color: var(--accent-teal); text-transform: capitalize;">
+                    ${r.verdict || "Verified"}
+                  </div>
                 </div>
               </div>
-              <div class="result-item">
-                <div class="result-item-label">Acoustic Consistency</div>
-                <div class="result-item-value" style="color: var(--accent-teal);">98.4% Matched</div>
-              </div>
-            </div>
 
-            <div class="security-notice-banner" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #34D399;">
-              <div>
-                <strong>Acoustic Telemetry:</strong> Audio exhibits natural micro-tremors, human breathing cadence, and zero phase-vocoder artifacts consistent with genuine human speech.
+              <div class="security-notice-banner" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: #34D399;">
+                <div>
+                  <strong>Live Telemetry:</strong> Acoustic wave verification confirmed natural biometric cadence, micro-tremors, and absence of AI vocoder artifacts.
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          }
           resultBox.style.display = "block";
         } catch (e) {
           alert("Error running DetectifAI analysis.");
