@@ -11,7 +11,15 @@ import secrets
 from typing import Optional
 from jose import JWTError, jwt
 
-SECRET_KEY = os.getenv("SECRET_KEY", "truvex_super_secret_dev_key_9283748291048291")
+SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "")
+if not SECRET_KEY:
+    import warnings
+    SECRET_KEY = secrets.token_urlsafe(64)
+    warnings.warn(
+        "JWT_SECRET is not set — using an ephemeral random key. "
+        "Tokens will NOT survive server restarts. Set JWT_SECRET in production.",
+        stacklevel=2,
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 120))
 

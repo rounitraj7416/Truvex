@@ -8,10 +8,13 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 # Load environment configuration
 load_dotenv()
@@ -22,10 +25,13 @@ from backend.routes import admin, auth, companies, employees, verification
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 
+# Rate limiter: 60 requests per minute per IP
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initializes SQLite database and seeds default demonstration records."""
+    """Initializes database and seeds default demonstration records."""
     init_db()
     yield
 
@@ -39,10 +45,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Middleware
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS Middleware — use env var in production, permissive in development
+_cors_origins = os.getenv("CORS_ORIGINS", "*")
+allowed_origins = [o.strip() for o in _cors_origins.split(",")] if _cors_origins != "*" else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

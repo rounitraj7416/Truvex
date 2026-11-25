@@ -373,3 +373,70 @@ async def report_fraud(payload: FraudReportCreate, db: Session = Depends(get_db)
         "report_id": report.id,
         "message": "Incident report registered. Security and compliance teams have been alerted.",
     }
+
+
+@router.post("/test-live-ai")
+async def test_live_ai(
+    model: str = Form(...),
+    speaker_id: str = Form("trx_spk_TRX-E-0001"),
+    confirmed_live_credit_spend: bool = Form(False),
+    file: UploadFile = File(...),
+):
+    """
+    Interactive Live AI Diagnostic Sandbox.
+    model choices: aletheia_detect, eidos_enroll, eidos_verify
+    Requires confirmed_live_credit_spend=true to consume credits.
+    """
+    audio_bytes = await file.read()
+    if len(audio_bytes) < 1000:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Audio recording is too short or corrupt.",
+        )
+
+    # Safety: refuse live calls unless explicitly confirmed
+    aletheia = AletheiaClient()
+    eidos = EidosClient()
+    is_live = aletheia.is_live_configured()
+
+    if is_live and not confirmed_live_credit_spend:
+        return {
+            "error": True,
+            "code": "credit_spend_not_confirmed",
+            "message": "This action would consume DetectifAI credits. Set confirmed_live_credit_spend=true to proceed.",
+            "is_live_api": is_live,
+        }
+
+    if model == "aletheia_detect":
+        result = await aletheia.detect_deepfake(
+            audio_bytes=audio_bytes,
+            filename=file.filename or "test.wav",
+            content_type=file.content_type or "audio/wav",
+        )
+    elif model == "eidos_enroll":
+        result = await eidos.enroll_speaker(
+            speaker_id=speaker_id,
+            audio_bytes=audio_bytes,
+            filename=file.filename or "enroll.wav",
+            content_type=file.content_type or "audio/wav",
+        )
+    elif model == "eidos_verify":
+        result = await eidos.verify_speaker(
+            speaker_id=speaker_id,
+            audio_bytes=audio_bytes,
+            filename=file.filename or "verify.wav",
+            content_type=file.content_type or "audio/wav",
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid model. Choose: aletheia_detect, eidos_enroll, eidos_verify",
+        )
+
+    return {
+        "success": not result.get("error", False),
+        "model": model,
+        "is_live_api": result.get("is_live_api", False),
+        "latency_ms": result.get("latency_ms"),
+        "result": result,
+    }

@@ -326,6 +326,20 @@
         formData.append("consent_given", consent ? "true" : "false");
         formData.append("file", recordedBlob, "pre_call_voice.wav");
 
+        // Check DetectifAI live configuration via health endpoint
+        const healthResp = await fetch("/api/health");
+        const healthData = await healthResp.json();
+        const isLive = healthData.detectif_configured && !healthData.detectif_mock_fallback;
+        if (isLive) {
+          const proceed = confirm("Live DetectifAI integration will consume credits. Do you want to continue?");
+          if (!proceed) {
+            errBox.textContent = "Live verification cancelled by user.";
+            errBox.style.display = "block";
+            scanModal.style.display = "none";
+            return;
+          }
+        }
+
         try {
           // Get saved token or login as Marcus for evaluation
           let token = localStorage.getItem("truvex_token");
@@ -376,7 +390,6 @@
             const s = String(secondsLeft % 60).padStart(2, "0");
             document.getElementById("session-countdown").textContent = `${m}:${s}`;
           }, 1000);
-
         } catch (err) {
           scanModal.style.display = "none";
           errBox.textContent = err.message;
