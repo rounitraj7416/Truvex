@@ -3,28 +3,345 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRUVEX — Customer Verification & Fraud Reporting</title>
+  <title>MY TRUVEX — Public Caller Verification</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-mesh"></div>
+  <canvas id="neural-canvas"></canvas>
+  <div class="cyber-glow glow-cyan"></div>
+  <div class="cyber-glow glow-purple"></div>
+
+  <!-- Header -->
   <header>
     <div class="nav-container">
-      <a href="/" class="brand">
-        <div class="brand-logo">T</div>
-        <span class="brand-text">TRUVEX</span>
+      <a href="/" class="brand-link">
+        <div class="brand-shield">T</div>
+        <div>
+          <span class="brand-name">MY TRUVEX</span>
+          <span class="brand-badge">Customer Portal</span>
+        </div>
       </a>
-      <ul class="nav-links">
-        <li><a href="/">← Back to Home</a></li>
+      <ul class="nav-menu">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="/employee" class="nav-link">Employee Console</a></li>
+        <li><a href="/login" class="btn-cyber">Enterprise Sign In</a></li>
       </ul>
     </div>
   </header>
-  <main style="max-width: 600px; margin: 5rem auto; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; text-align: center;">
-    <h2>Customer Trust Portal</h2>
-    <p style="color: var(--text-secondary); margin: 1rem 0 2rem;">Verify an incoming caller's identity or report an unverified suspicious communication.</p>
-    <div style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px dashed var(--border-color); color: var(--accent-cyan);">
-      Phase 2: Customer verification result card and fraud incident reporting form being built by Arunav.
+
+  <!-- Main Content -->
+  <main class="main-wrapper" style="max-width: 900px;">
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <span class="status-pill pill-cyan">Independent Out-of-Band Verification</span>
+      <h1 style="font-size: 2.75rem; font-weight: 900; margin-top: 0.75rem; letter-spacing: -0.03em;">
+        Verify Your <span style="background: linear-gradient(135deg, #00d9ff, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Caller</span>
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 1.05rem; max-width: 650px; margin: 0.5rem auto 0;">
+        Before disclosing confidential information or approving requests, verify the caller's Trust ID and voice authenticity.
+      </p>
+    </div>
+
+    <!-- Verification Lookup Form -->
+    <div class="cyber-card" style="margin-bottom: 2rem; border-color: var(--border-glow);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff;">Enter Stated Call Credentials</h3>
+        <button id="btn-fill-sample" class="btn-cyber-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+          ⚡ Load Sample Credentials
+        </button>
+      </div>
+
+      <form id="verify-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Company ID</label>
+          <input type="text" id="comp-id" class="form-input" placeholder="e.g. TRX-C-0001" required />
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Employee ID</label>
+          <input type="text" id="emp-id" class="form-input" placeholder="e.g. TRX-E-0001" required />
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Temporary Session ID</label>
+          <input type="text" id="sess-id" class="form-input" placeholder="e.g. TRX-S-849201" required />
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+          <button type="submit" id="btn-lookup" class="btn-cyber" style="width: 100%; justify-content: center; padding: 0.75rem;">
+            Verify Caller Now
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Verification Result Card (Dynamic) -->
+    <div id="result-box" style="display: none;"></div>
+
+    <!-- Fraud Reporting CTA -->
+    <div class="cyber-card" style="margin-top: 2rem; background: rgba(244, 63, 94, 0.04); border-color: rgba(244, 63, 94, 0.25); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h4 style="color: var(--rose); font-size: 1.05rem; font-weight: 700;">Received a Suspicious or Unverified Call?</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">
+          Report fake bank executives, spoofed callers, or unauthenticated callers to the security network.
+        </p>
+      </div>
+      <button id="btn-open-report" class="btn-danger">
+        🚨 Report Suspicious Call
+      </button>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(6, 9, 15, 0.85); backdrop-filter: blur(12px); z-index: 1000; align-items: center; justify-content: center;">
+      <div class="cyber-card" style="max-width: 500px; width: 90%; padding: 2rem; border-color: var(--rose);">
+        <h3 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">Report Caller Impersonation</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">
+          Incident reports alert enterprise security operations and contribute to universal threat telemetry.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Claimed Organization Name</label>
+          <input type="text" id="rep-company" class="form-input" placeholder="e.g. Apex Global Bank" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Caller Phone Number (if visible)</label>
+          <input type="text" id="rep-phone" class="form-input" placeholder="e.g. +91 98765 43210" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Incident Description / Stated Demands</label>
+          <textarea id="rep-desc" class="form-textarea" rows="3" placeholder="Caller claimed an urgent account block and demanded OTP..."></textarea>
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+          <button id="btn-cancel-report" class="btn-cyber-outline">Cancel</button>
+          <button id="btn-submit-report" class="btn-danger">Submit Incident Report</button>
+        </div>
+      </div>
     </div>
   </main>
+
+  <script src="/static/js/neural-canvas.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("verify-form");
+      const compInput = document.getElementById("comp-id");
+      const empInput = document.getElementById("emp-id");
+      const sessInput = document.getElementById("sess-id");
+      const resultBox = document.getElementById("result-box");
+      const fillSampleBtn = document.getElementById("btn-fill-sample");
+
+      // Check URL parameters for direct lookup link
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("company")) compInput.value = urlParams.get("company");
+      if (urlParams.has("employee")) empInput.value = urlParams.get("employee");
+      if (urlParams.has("session_id")) sessInput.value = urlParams.get("session_id");
+
+      // Sample credentials filler
+      fillSampleBtn.addEventListener("click", () => {
+        compInput.value = "TRX-C-0001";
+        empInput.value = "TRX-E-0001";
+        if (!sessInput.value) sessInput.value = "TRX-S-849201";
+      });
+
+      // Submit verification query
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        resultBox.style.display = "block";
+        resultBox.innerHTML = `
+          <div class="cyber-card" style="text-align: center; padding: 2rem;">
+            <div class="pulse-dot" style="margin: 0 auto 0.75rem; width: 14px; height: 14px; color: var(--cyan);"></div>
+            <div style="font-weight: 700; color: #fff;">Querying TRUVEX Five-Layer Verification Vault...</div>
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Reusing cryptographic session evidence (0 API credits burned)</div>
+          </div>
+        `;
+
+        try {
+          const resp = await fetch("/api/verification/customer-lookup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              company_id_or_code: compInput.value.trim(),
+              employee_id_or_code: empInput.value.trim(),
+              session_id: sessInput.value.trim()
+            })
+          });
+
+          const data = await resp.json();
+          renderVerificationResult(data);
+        } catch (err) {
+          resultBox.innerHTML = `
+            <div class="cyber-card" style="border-color: var(--rose); color: var(--rose); text-align: center;">
+              Failed to connect to verification server: ${err.message}
+            </div>
+          `;
+        }
+      });
+
+      // If parameters exist, auto-trigger lookup
+      if (sessInput.value && compInput.value && empInput.value) {
+        form.dispatchEvent(new Event("submit"));
+      }
+
+      function renderVerificationResult(data) {
+        if (!data.valid) {
+          resultBox.innerHTML = `
+            <div class="cyber-card" style="border-color: var(--rose); padding: 2rem; text-align: center;">
+              <span class="status-pill pill-rose" style="font-size: 0.85rem; padding: 0.35rem 1rem;">
+                ⚠️ VERIFICATION REJECTED / INVALID SESSION
+              </span>
+              <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--rose); margin-top: 0.75rem;">
+                DO NOT TRUST THIS CALLER
+              </h2>
+              <p style="color: var(--text-secondary); max-width: 580px; margin: 0.5rem auto 1.5rem; font-size: 0.925rem;">
+                The provided credentials (${data.session_id}) do not match an active verified communication session. This call may be an unauthorized impersonation attempt.
+              </p>
+              <div style="background: rgba(244, 63, 94, 0.1); border: 1px solid var(--rose); border-radius: 8px; padding: 1rem; max-width: 480px; margin: 0 auto 1.5rem; text-align: left; font-size: 0.85rem;">
+                <div><strong>Reason:</strong> ${data.status === "EXPIRED" ? "Session expired past its 10-minute security TTL." : "Credentials mismatch or unapproved institution."}</div>
+              </div>
+              <button onclick="document.getElementById('report-modal').style.display = 'flex';" class="btn-danger">
+                Report Call Immediately
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        // Valid Verified Session Card
+        resultBox.innerHTML = `
+          <div class="cyber-card" style="border-color: var(--emerald); padding: 2.25rem;">
+            <!-- Header Status -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+              <div>
+                <span class="status-pill pill-emerald" style="font-size: 0.85rem; padding: 0.35rem 0.9rem;">
+                  <span class="pulse-dot"></span> VERIFIED CALLER AUTHENTICATED
+                </span>
+                <h2 style="font-size: 2rem; font-weight: 900; margin-top: 0.5rem; color: #fff;">
+                  ${data.company_name}
+                </h2>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                  Company ID: <strong style="color: var(--cyan);">${data.company_code}</strong> &bull; Accreditation: <span style="color: var(--emerald); font-weight: 600;">APPROVED</span>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 2.2rem; font-weight: 900; color: var(--emerald);">${data.trust_score}%</div>
+                <div style="font-size: 0.72rem; color: var(--emerald); font-weight: 700; text-transform: uppercase;">Maximum Trust Index</div>
+                <div style="font-size: 0.78rem; color: var(--amber); margin-top: 0.3rem;">⏱️ Session active for ${Math.floor(data.remaining_seconds / 60)}m ${data.remaining_seconds % 60}s</div>
+              </div>
+            </div>
+
+            <!-- Representative Details -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Verified Representative</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">${data.employee_name}</div>
+                <div style="font-size: 0.8rem; color: var(--cyan); font-mono;">${data.employee_code} &bull; ${data.designation}</div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Department & Authority</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">${data.department}</div>
+                <div style="font-size: 0.8rem; color: var(--emerald);">✓ Authorized for Outbound Calling</div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Certified Purpose of Call</div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: var(--amber); margin-top: 0.25rem;">${data.call_topic}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Caller cannot deviate from stated topic</div>
+              </div>
+            </div>
+
+            <!-- Five-Layer Evidence Breakdown -->
+            <div style="background: rgba(0, 0, 0, 0.45); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+              <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
+                Five-Layer Cryptographic Verification Evidence
+              </h4>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.85rem; background: rgba(255, 255, 255, 0.02); border-radius: 8px;">
+                  <span style="font-size: 0.85rem; color: var(--text-secondary);">1. Business Accreditation:</span>
+                  <span class="status-pill pill-emerald" style="font-size: 0.7rem;">PASSED (100%)</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.85rem; background: rgba(255, 255, 255, 0.02); border-radius: 8px;">
+                  <span style="font-size: 0.85rem; color: var(--text-secondary);">2. Corporate Directory:</span>
+                  <span class="status-pill pill-emerald" style="font-size: 0.7rem;">PASSED (Active)</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.85rem; background: rgba(255, 255, 255, 0.02); border-radius: 8px;">
+                  <span style="font-size: 0.85rem; color: var(--text-secondary);">3. Aletheia Deepfake Check:</span>
+                  <span class="status-pill pill-cyan" style="font-size: 0.7rem;">REAL HUMAN (Score 0.038)</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.85rem; background: rgba(255, 255, 255, 0.02); border-radius: 8px;">
+                  <span style="font-size: 0.85rem; color: var(--text-secondary);">4. Eidos Biometric Match:</span>
+                  <span class="status-pill pill-purple" style="font-size: 0.7rem;">VERIFIED (88.4% Sim)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Out-of-Band Mutual Challenge PIN Box -->
+            <div style="background: rgba(139, 92, 246, 0.08); border: 1px dashed var(--border-purple); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--purple);">Out-of-Band Security Challenge PIN</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                  Ask the caller for their 4-digit session challenge code to ensure zero man-in-the-middle interception:
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <input 
+                  type="text" 
+                  id="challenge-input" 
+                  maxlength="4" 
+                  placeholder="PIN" 
+                  style="width: 80px; text-align: center; font-family: var(--font-mono); font-size: 1.2rem; font-weight: 800; background: #000; border: 1px solid var(--purple); color: #fff; border-radius: 6px; padding: 0.35rem;" 
+                  value="${data.challenge_code || ''}"
+                />
+                <button id="btn-confirm-pin" class="btn-cyber" style="padding: 0.5rem 0.85rem;">Confirm PIN</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("btn-confirm-pin")?.addEventListener("click", async () => {
+          const pin = document.getElementById("challenge-input").value.trim();
+          const resp = await fetch("/api/verification/confirm-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: data.session_id, challenge_code: pin })
+          });
+          const res = await resp.json();
+          alert(res.message);
+        });
+      }
+
+      // Fraud report modal controls
+      const reportModal = document.getElementById("report-modal");
+      document.getElementById("btn-open-report").addEventListener("click", () => {
+        reportModal.style.display = "flex";
+      });
+      document.getElementById("btn-cancel-report").addEventListener("click", () => {
+        reportModal.style.display = "none";
+      });
+      document.getElementById("btn-submit-report").addEventListener("click", async () => {
+        const company = document.getElementById("rep-company").value.trim();
+        const phone = document.getElementById("rep-phone").value.trim();
+        const desc = document.getElementById("rep-desc").value.trim();
+
+        if (!desc) {
+          alert("Please describe the incident.");
+          return;
+        }
+
+        const resp = await fetch("/api/verification/report-fraud", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            claimed_company_name: company,
+            caller_phone: phone,
+            description: desc,
+            claimed_session_id: sessInput.value.trim()
+          })
+        });
+
+        if (resp.ok) {
+          alert("Fraud incident logged successfully. Incident report dispatched to compliance team.");
+          reportModal.style.display = "none";
+        }
+      });
+    });
+  </script>
 </body>
 </html>

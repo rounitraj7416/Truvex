@@ -1,7 +1,8 @@
 """
 TRUVEX Five-Layer Trust Engine.
 Owner: Anany
-Status: Phase 1 Skeleton
+Implements strict security boundaries where no average score can override
+a failed mandatory security check (deepfake detected, speaker mismatch, unapproved company).
 """
 
 from typing import Any, Dict
@@ -10,68 +11,127 @@ from typing import Any, Dict
 class TrustEngine:
     """Computes composite Trust Index (0-100%) across five verification boundaries."""
 
-    WEIGHT_BUSINESS = 0.20
-    WEIGHT_EMPLOYEE = 0.20
-    WEIGHT_ALETHEIA = 0.20
-    WEIGHT_EIDOS = 0.20
-    WEIGHT_AUTHORITY = 0.20
+    WEIGHT_BUSINESS = 20.0
+    WEIGHT_EMPLOYEE = 20.0
+    WEIGHT_ALETHEIA = 20.0
+    WEIGHT_EIDOS = 20.0
+    WEIGHT_AUTHORITY = 20.0
 
     @classmethod
     def evaluate(
         cls,
         company_status: str,
         employee_status: str,
-        aletheia_result: Dict[str, Any],
-        eidos_result: Dict[str, Any],
-        authority_cleared: bool = True,
+        can_initiate_calls: bool,
+        aletheia_data: Dict[str, Any],
+        eidos_data: Dict[str, Any],
+        communication_category: str = "fraud_prevention",
     ) -> Dict[str, Any]:
         """
-        Evaluates the five layers and computes composite trust score.
+        Evaluates the five layers and enforces zero-tolerance hard security checks.
         """
-        # Layer 1: Business Verification
-        l1_pass = company_status == "approved"
-        l1_score = 100.0 if l1_pass else 0.0
+        hard_failures = []
 
-        # Layer 2: Employee Identity Verification
-        l2_pass = employee_status == "active"
-        l2_score = 100.0 if l2_pass else 0.0
+        # 1. Layer 1: Business Verification
+        l1_passed = company_status == "approved"
+        if not l1_passed:
+            hard_failures.append("Company is not approved or is currently suspended.")
+        l1_score = cls.WEIGHT_BUSINESS if l1_passed else 0.0
 
-        # Layer 3: Voice Authenticity (Aletheia Deepfake Detection)
-        verdict = aletheia_result.get("verdict", "unknown")
-        raw_score = float(aletheia_result.get("score", 0.5))  # 0.0=real, 1.0=fake
-        l3_pass = verdict == "real" and raw_score < 0.3
-        l3_score = max(0.0, (1.0 - raw_score) * 100.0) if l3_pass else 0.0
+        # 2. Layer 2: Employee Identity Verification
+        l2_passed = employee_status == "active"
+        if not l2_passed:
+            hard_failures.append("Employee status is inactive, suspended, or terminated.")
+        l2_score = cls.WEIGHT_EMPLOYEE if l2_passed else 0.0
 
-        # Layer 4: Speaker Biometrics (Eidos Verification)
-        decision = eidos_result.get("decision", "no_match")
-        similarity = float(eidos_result.get("similarity", 0.0))  # -1.0 to 1.0
-        l4_pass = decision == "match" and similarity > 0.4
-        l4_score = max(0.0, min(100.0, (similarity * 50.0) + 50.0)) if l4_pass else 0.0
+        # 3. Layer 3: Voice Authenticity (DetectifAI Aletheia)
+        # Check for API error
+        if aletheia_data.get("error"):
+            verdict = "uncertain"
+            aletheia_score = 0.5
+            l3_passed = False
+            hard_failures.append(f"Aletheia Deepfake API Error: {aletheia_data.get('message', 'Unknown error')}")
+            l3_score = 0.0
+        else:
+            res_aletheia = aletheia_data.get("result", {})
+            verdict = res_aletheia.get("verdict", "unknown")
+            aletheia_score = float(res_aletheia.get("score", 0.05))  # 0=real, 1=fake
+            l3_passed = verdict == "real" and aletheia_score < 0.35
+            if not l3_passed:
+                hard_failures.append(f"Potential synthetic / deepfake voice detected (verdict: {verdict}).")
+            l3_score = cls.WEIGHT_ALETHEIA * max(0.0, 1.0 - aletheia_score) if l3_passed else 0.0
 
-        # Layer 5: Communication Authority & Session Context
-        l5_pass = authority_cleared
-        l5_score = 100.0 if l5_pass else 0.0
+        # 4. Layer 4: Speaker Biometrics (DetectifAI Eidos)
+        if eidos_data.get("error"):
+            decision = "uncertain"
+            similarity = 0.0
+            l4_passed = False
+            hard_failures.append(f"Eidos Biometrics API Error: {eidos_data.get('message', 'Unknown error')}")
+            l4_score = 0.0
+        else:
+            res_eidos = eidos_data.get("result", {})
+            decision = res_eidos.get("decision", "no_match")
+            similarity = float(res_eidos.get("similarity", 0.0))  # -1.0 to 1.0
+            l4_passed = decision == "match" and similarity > 0.45
+            if not l4_passed:
+                hard_failures.append("Speaker voiceprint does not match the enrolled employee biometric profile.")
+            normalized_sim = max(0.0, min(1.0, (similarity + 1.0) / 2.0))
+            l4_score = cls.WEIGHT_EIDOS * normalized_sim if l4_passed else 0.0
 
-        # Composite Weighted Score
-        total_score = (
-            (l1_score * cls.WEIGHT_BUSINESS)
-            + (l2_score * cls.WEIGHT_EMPLOYEE)
-            + (l3_score * cls.WEIGHT_ALETHEIA)
-            + (l4_score * cls.WEIGHT_EIDOS)
-            + (l5_score * cls.WEIGHT_AUTHORITY)
-        )
+        # 5. Layer 5: Communication Authority & Session Context
+        l5_passed = can_initiate_calls
+        if not l5_passed:
+            hard_failures.append("Employee lacks permission to initiate outbound customer calls.")
+        l5_score = cls.WEIGHT_AUTHORITY if l5_passed else 0.0
 
-        all_critical_passed = l1_pass and l2_pass and l3_pass and l4_pass and l5_pass
-        verdict_str = "VERIFIED" if all_critical_passed and total_score >= 80.0 else "UNVERIFIED"
+        # Composite Score Calculation
+        raw_total = l1_score + l2_score + l3_score + l4_score + l5_score
+
+        # Rule: A failed mandatory security check CANNOT be averaged out!
+        if hard_failures:
+            verdict_str = "REJECTED"
+            trust_score = min(raw_total, 45.0)  # Capped if any hard check fails
+        elif raw_total >= 85.0:
+            verdict_str = "VERIFIED"
+            trust_score = raw_total
+        elif raw_total >= 70.0:
+            verdict_str = "MANUAL_REVIEW"
+            trust_score = raw_total
+        else:
+            verdict_str = "REJECTED"
+            trust_score = raw_total
 
         return {
-            "trust_score": round(total_score, 1),
+            "trust_score": round(trust_score, 1),
             "verdict": verdict_str,
+            "hard_failures": hard_failures,
             "layers": {
-                "business": {"passed": l1_pass, "score": l1_score},
-                "employee": {"passed": l2_pass, "score": l2_score},
-                "voice_authenticity": {"passed": l3_pass, "score": l3_score, "aletheia_verdict": verdict},
-                "speaker_biometrics": {"passed": l4_pass, "score": l4_score, "eidos_decision": decision},
-                "authority": {"passed": l5_pass, "score": l5_score},
+                "business": {
+                    "passed": l1_passed,
+                    "score": round(l1_score, 1),
+                    "status": "APPROVED" if l1_passed else "UNAPPROVED",
+                },
+                "employee": {
+                    "passed": l2_passed,
+                    "score": round(l2_score, 1),
+                    "status": "ACTIVE" if l2_passed else "INACTIVE",
+                },
+                "voice_authenticity": {
+                    "passed": l3_passed,
+                    "score": round(l3_score, 1),
+                    "verdict": verdict,
+                    "raw_score": aletheia_score,
+                },
+                "speaker_biometrics": {
+                    "passed": l4_passed,
+                    "score": round(l4_score, 1),
+                    "decision": decision,
+                    "similarity": similarity,
+                },
+                "authority": {
+                    "passed": l5_passed,
+                    "score": round(l5_score, 1),
+                    "status": "AUTHORIZED" if l5_passed else "UNAUTHORIZED",
+                },
             },
         }

@@ -3,28 +3,320 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRUVEX — Enterprise Dashboard</title>
+  <title>TRUVEX Business — Enterprise Administration</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-mesh"></div>
+  <canvas id="neural-canvas"></canvas>
+  <div class="cyber-glow glow-cyan"></div>
+  <div class="cyber-glow glow-purple"></div>
+
+  <!-- Header -->
   <header>
     <div class="nav-container">
-      <a href="/" class="brand">
-        <div class="brand-logo">T</div>
-        <span class="brand-text">TRUVEX</span>
+      <a href="/" class="brand-link">
+        <div class="brand-shield">T</div>
+        <div>
+          <span class="brand-name">TRUVEX Business</span>
+          <span class="brand-badge">Enterprise Console</span>
+        </div>
       </a>
-      <ul class="nav-links">
-        <li><a href="/">← Back to Home</a></li>
+      <ul class="nav-menu">
+        <li><a href="/employee" class="nav-link">Employee Call Console</a></li>
+        <li><a href="/customer" class="nav-link">Customer Verification</a></li>
+        <li><a href="/login" class="btn-cyber-outline" onclick="localStorage.clear();">Sign Out</a></li>
       </ul>
     </div>
   </header>
-  <main style="max-width: 700px; margin: 5rem auto; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; text-align: center;">
-    <h2>Enterprise Administration</h2>
-    <p style="color: var(--text-secondary); margin: 1rem 0 2rem;">Manage employee rosters, voice enrollment statuses, and communication policies.</p>
-    <div style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px dashed var(--border-color); color: var(--accent-cyan);">
-      Phase 2: Enterprise roster tables and voice enrollment actions being built by Arunav.
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <!-- Top Company Accreditation Card -->
+    <div class="cyber-card" style="margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <h1 id="disp-comp-name" style="font-size: 1.8rem; font-weight: 800; color: #fff;">Apex Global Bank</h1>
+            <span id="disp-comp-code" class="status-pill pill-cyan">TRX-C-0001</span>
+            <span id="disp-comp-status" class="status-pill pill-emerald"><span class="pulse-dot"></span> ACCREDITED</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.25rem;">
+            Registration: <strong>REG-IN-2026-0912</strong> &bull; Industry: <strong>Banking & Financial Services</strong> &bull; Support: <strong>+1-800-APEX-SEC</strong>
+          </p>
+        </div>
+
+        <button id="btn-open-add-emp" class="btn-cyber">
+          + Add Authorized Employee
+        </button>
+      </div>
+
+      <!-- Employee Counters Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Declared Workforce</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #fff;">250</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Registered Callers</div>
+          <div id="count-registered" style="font-size: 1.5rem; font-weight: 800; color: var(--cyan);">1</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Voice Biometrics Enrolled</div>
+          <div id="count-enrolled" style="font-size: 1.5rem; font-weight: 800; color: var(--purple);">1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee Roster Table -->
+    <div class="cyber-card" style="margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: #fff;">Authorized Communication Personnel</h3>
+          <p style="color: var(--text-secondary); font-size: 0.825rem;">Personnel authorized to request pre-call voice screening and issue Trust IDs.</p>
+        </div>
+      </div>
+
+      <div class="cyber-table-wrap">
+        <table class="cyber-table">
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Full Name</th>
+              <th>Department / Role</th>
+              <th>Call Permissions</th>
+              <th>Eidos Biometrics</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="emp-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Company Registration Section (For New Enterprise Onboarding) -->
+    <div id="register-section" class="cyber-card" style="margin-top: 2rem; border-color: var(--border-purple);">
+      <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem;">
+        Register a New Enterprise for Accreditation
+      </h3>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+        Submit institutional accreditation details. Platform administrators review and assign a permanent Company ID (e.g. <code>TRX-C-0002</code>).
+      </p>
+
+      <form id="company-reg-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Legal Entity Name</label>
+          <input type="text" id="reg-name" class="form-input" placeholder="e.g. Northwind Financial Inc." required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Industry Domain</label>
+          <input type="text" id="reg-industry" class="form-input" placeholder="e.g. Insurance & Underwriting" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Official Email</label>
+          <input type="email" id="reg-email" class="form-input" placeholder="security@northwind.example" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Official Website</label>
+          <input type="url" id="reg-website" class="form-input" placeholder="https://northwind.example" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Government Registration Number</label>
+          <input type="text" id="reg-number" class="form-input" placeholder="e.g. REG-NW-9921" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Declared Workforce Size</label>
+          <input type="number" id="reg-count" class="form-input" value="50" min="1" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Corporate Administrator Name</label>
+          <input type="text" id="reg-admin-name" class="form-input" placeholder="e.g. Robert Vance" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Administrator Password</label>
+          <input type="password" id="reg-admin-pass" class="form-input" placeholder="••••••••" required />
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button type="submit" id="btn-submit-company" class="btn-cyber" style="padding: 0.75rem 1.5rem;">
+            Submit Company for Review
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal: Add Employee -->
+    <div id="add-emp-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(6, 9, 15, 0.85); backdrop-filter: blur(12px); z-index: 1000; align-items: center; justify-content: center;">
+      <div class="cyber-card" style="max-width: 520px; width: 90%; padding: 2rem;">
+        <h3 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">Add Authorized Employee</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">
+          Assigns a sequential Employee ID (e.g. <code>TRX-E-XXXX</code>) and prepares Eidos biometric voice enrollment.
+        </p>
+
+        <form id="add-emp-form">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="new-emp-name" class="form-input" placeholder="e.g. Elena Rostova" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Corporate Email</label>
+            <input type="email" id="new-emp-email" class="form-input" placeholder="elena@apexbank.example" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Password</label>
+            <input type="password" id="new-emp-pass" class="form-input" placeholder="••••••••" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <input type="text" id="new-emp-dept" class="form-input" placeholder="e.g. Wealth Management" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Designation</label>
+            <input type="text" id="new-emp-desig" class="form-input" placeholder="e.g. Senior Portfolio Officer" required />
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button type="button" id="btn-cancel-add-emp" class="btn-cyber-outline">Cancel</button>
+            <button type="submit" id="btn-save-emp" class="btn-cyber">Create Employee</button>
+          </div>
+        </form>
+      </div>
     </div>
   </main>
+
+  <script src="/static/js/neural-canvas.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const empTableBody = document.getElementById("emp-table-body");
+      const addEmpModal = document.getElementById("add-emp-modal");
+      const openAddEmpBtn = document.getElementById("btn-open-add-emp");
+      const cancelAddEmpBtn = document.getElementById("btn-cancel-add-emp");
+      const addEmpForm = document.getElementById("add-emp-form");
+      const companyRegForm = document.getElementById("company-reg-form");
+
+      openAddEmpBtn.addEventListener("click", () => addEmpModal.style.display = "flex");
+      cancelAddEmpBtn.addEventListener("click", () => addEmpModal.style.display = "none");
+
+      // Auto login as Enterprise Admin if no token present
+      let token = localStorage.getItem("truvex_token");
+      if (!token) {
+        const loginResp = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "admin@apexbank.example", password: "ApexBank123!" })
+        });
+        if (loginResp.ok) {
+          const loginData = await loginResp.json();
+          token = loginData.access_token;
+          localStorage.setItem("truvex_token", token);
+        }
+      }
+
+      async function loadEmployees() {
+        try {
+          const resp = await fetch("/api/employees", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (resp.ok) {
+            const employees = await resp.json();
+            document.getElementById("count-registered").textContent = employees.length;
+            document.getElementById("count-enrolled").textContent = employees.filter(e => e.voice_enrolled).length;
+
+            empTableBody.innerHTML = employees.map(emp => `
+              <tr>
+                <td><strong style="color: var(--cyan); font-family: var(--font-mono);">${emp.employee_code}</strong></td>
+                <td><strong style="color: #fff;">${emp.full_name}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${emp.email}</span></td>
+                <td>${emp.department}<br><span style="font-size: 0.75rem; color: var(--text-secondary);">${emp.designation}</span></td>
+                <td><span style="font-size: 0.78rem; color: var(--text-secondary);">${emp.communication_permissions}</span></td>
+                <td>
+                  ${emp.voice_enrolled 
+                    ? `<span class="status-pill pill-emerald">Enrolled (${emp.voice_samples_count})</span>` 
+                    : `<span class="status-pill pill-amber">Pending Sample</span>`
+                  }
+                </td>
+                <td><span class="status-pill pill-emerald">${emp.status}</span></td>
+                <td>
+                  <a href="/employee" class="btn-cyber-outline" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;">
+                    Launch Console
+                  </a>
+                </td>
+              </tr>
+            `).join("");
+          }
+        } catch (err) {
+          console.warn("Failed to load employees:", err);
+        }
+      }
+
+      loadEmployees();
+
+      // Handle Add Employee Form
+      addEmpForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+          full_name: document.getElementById("new-emp-name").value.trim(),
+          email: document.getElementById("new-emp-email").value.trim(),
+          password: document.getElementById("new-emp-pass").value,
+          department: document.getElementById("new-emp-dept").value.trim(),
+          designation: document.getElementById("new-emp-desig").value.trim(),
+          can_initiate_calls: true
+        };
+
+        const resp = await fetch("/api/employees", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        if (resp.ok) {
+          alert(`Employee registered successfully! Assigned ID: ${data.employee_code}`);
+          addEmpModal.style.display = "none";
+          addEmpForm.reset();
+          loadEmployees();
+        } else {
+          alert(`Error: ${data.detail || "Failed to add employee"}`);
+        }
+      });
+
+      // Handle Company Registration Form
+      companyRegForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+          name: document.getElementById("reg-name").value.trim(),
+          industry: document.getElementById("reg-industry").value.trim(),
+          official_email: document.getElementById("reg-email").value.trim(),
+          official_website: document.getElementById("reg-website").value.trim(),
+          registration_number: document.getElementById("reg-number").value.trim(),
+          support_contact: "+1-800-SEC-CORP",
+          declared_employees: parseInt(document.getElementById("reg-count").value) || 10,
+          admin_name: document.getElementById("reg-admin-name").value.trim(),
+          admin_email: document.getElementById("reg-email").value.trim(),
+          admin_password: document.getElementById("reg-admin-pass").value
+        };
+
+        const resp = await fetch("/api/companies/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        if (resp.ok) {
+          alert("Company submitted for platform accreditation! Review in Admin Control panel.");
+          companyRegForm.reset();
+        } else {
+          alert(`Error: ${data.detail || "Registration failed"}`);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

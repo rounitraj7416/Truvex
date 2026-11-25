@@ -3,28 +3,289 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRUVEX — Platform Superadmin</title>
+  <title>TRUVEX Control — Platform Superadmin</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-mesh"></div>
+  <canvas id="neural-canvas"></canvas>
+  <div class="cyber-glow glow-cyan"></div>
+  <div class="cyber-glow glow-purple"></div>
+
+  <!-- Header -->
   <header>
     <div class="nav-container">
-      <a href="/" class="brand">
-        <div class="brand-logo">T</div>
-        <span class="brand-text">TRUVEX</span>
+      <a href="/" class="brand-link">
+        <div class="brand-shield" style="background: linear-gradient(135deg, var(--amber), #ef4444);">⚙️</div>
+        <div>
+          <span class="brand-name">TRUVEX Control</span>
+          <span class="brand-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.4);">Root Admin</span>
+        </div>
       </a>
-      <ul class="nav-links">
-        <li><a href="/">← Back to Home</a></li>
+      <ul class="nav-menu">
+        <li><a href="/enterprise" class="nav-link">Enterprise Portal</a></li>
+        <li><a href="/employee" class="nav-link">Employee Console</a></li>
+        <li><a href="/customer" class="nav-link">Customer Verification</a></li>
+        <li><a href="/login" class="btn-cyber-outline" onclick="localStorage.clear();">Sign Out</a></li>
       </ul>
     </div>
   </header>
-  <main style="max-width: 700px; margin: 5rem auto; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; text-align: center;">
-    <h2>Platform Superadmin Console</h2>
-    <p style="color: var(--text-secondary); margin: 1rem 0 2rem;">Company review, accreditation approvals, and platform-wide security audit logs.</p>
-    <div style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px dashed var(--border-color); color: var(--accent-cyan);">
-      Phase 2: Platform administrative vetting portal being built by Arunav.
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 2.2rem; font-weight: 800; color: #fff;">Platform Administration</h1>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Universal Trust Layer infrastructure control, enterprise vetting, and DetectifAI telemetry.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="https://platform.detectif.ai" target="_blank" class="btn-cyber">
+          DetectifAI Dashboard ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- Telemetry Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+      <div class="cyber-card" style="padding: 1.25rem;">
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Total Enterprises</div>
+        <div id="stat-total-comp" style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-top: 0.2rem;">1</div>
+        <div id="stat-pending-comp" style="font-size: 0.75rem; color: var(--amber);">0 Pending Review</div>
+      </div>
+      <div class="cyber-card" style="padding: 1.25rem;">
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Authorized Callers</div>
+        <div id="stat-total-emp" style="font-size: 1.8rem; font-weight: 800; color: var(--cyan); margin-top: 0.2rem;">1</div>
+        <div id="stat-enrolled-emp" style="font-size: 0.75rem; color: var(--purple);">1 Voice Enrolled</div>
+      </div>
+      <div class="cyber-card" style="padding: 1.25rem;">
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Active Sessions</div>
+        <div id="stat-active-sess" style="font-size: 1.8rem; font-weight: 800; color: var(--emerald); margin-top: 0.2rem;">0</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">TTL Validated</div>
+      </div>
+      <div class="cyber-card" style="padding: 1.25rem;">
+        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Reported Incidents</div>
+        <div id="stat-reports" style="font-size: 1.8rem; font-weight: 800; color: var(--rose); margin-top: 0.2rem;">0</div>
+        <div style="font-size: 0.75rem; color: var(--rose);">Fraud Triage</div>
+      </div>
+    </div>
+
+    <!-- DetectifAI Integration Health Card -->
+    <div class="cyber-card" style="margin-bottom: 2rem; border-color: var(--border-glow);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span class="status-pill pill-cyan">DetectifAI Telemetry</span>
+          <h3 style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 0.4rem;">
+            Aletheia & Eidos Model Status
+          </h3>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">
+            Endpoint Base URL: <code>https://platform.detectif.ai</code> &bull; Official Docs: <a href="https://platform.detectif.ai/docs" target="_blank" style="color: var(--cyan);">platform.detectif.ai/docs ↗</a>
+          </p>
+        </div>
+        <div id="detectif-mode-badge">
+          <span class="status-pill pill-cyan">Checking...</span>
+        </div>
+      </div>
+
+      <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem; margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-size: 0.825rem; font-weight: 600; color: #fff;">Local API Key Configuration Utility:</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">python setup_api.py</div>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-secondary);">
+          Credit Pool: <strong>5,000 Hackathon Credits</strong> &bull; Zero credit consumption on lookups
+        </div>
+      </div>
+    </div>
+
+    <!-- Enterprise Accreditation Applications -->
+    <div class="cyber-card" style="margin-bottom: 2rem;">
+      <h3 style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">
+        Enterprise Accreditation Management
+      </h3>
+      <p style="color: var(--text-secondary); font-size: 0.825rem; margin-bottom: 1.25rem;">
+        Review submitted institutions. Approving automatically issues sequential Company ID (e.g. <code>TRX-C-XXXX</code>).
+      </p>
+
+      <div class="cyber-table-wrap">
+        <table class="cyber-table">
+          <thead>
+            <tr>
+              <th>Company ID</th>
+              <th>Organization</th>
+              <th>Industry / Reg No</th>
+              <th>Official Contact</th>
+              <th>Workforce</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="company-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Fraud Triage & Security Audit Logs -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <!-- Fraud Reports -->
+      <div class="cyber-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--rose); margin-bottom: 0.75rem;">
+          🚨 Fraud Incident Feed
+        </h3>
+        <div id="fraud-feed" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Audit Logs -->
+      <div class="cyber-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.75rem;">
+          📜 Immutable Security Audit Log
+        </h3>
+        <div id="audit-feed" style="max-height: 280px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
     </div>
   </main>
+
+  <script src="/static/js/neural-canvas.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const compTableBody = document.getElementById("company-table-body");
+      const fraudFeed = document.getElementById("fraud-feed");
+      const auditFeed = document.getElementById("audit-feed");
+
+      // Auto-authenticate as Superadmin for evaluation
+      let token = localStorage.getItem("truvex_token");
+      if (!token) {
+        const loginResp = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "admin@truvex.ai", password: "AdminPass123!" })
+        });
+        if (loginResp.ok) {
+          const loginData = await loginResp.json();
+          token = loginData.access_token;
+          localStorage.setItem("truvex_token", token);
+        }
+      }
+
+      async function loadAdminData() {
+        try {
+          // 1. Stats
+          const statsResp = await fetch("/api/admin/stats");
+          if (statsResp.ok) {
+            const stats = await statsResp.json();
+            document.getElementById("stat-total-comp").textContent = stats.total_companies;
+            document.getElementById("stat-pending-comp").textContent = `${stats.pending_companies} Pending Review`;
+            document.getElementById("stat-total-emp").textContent = stats.total_employees;
+            document.getElementById("stat-enrolled-emp").textContent = `${stats.voice_enrolled_employees} Voice Enrolled`;
+            document.getElementById("stat-active-sess").textContent = stats.active_sessions;
+            document.getElementById("stat-reports").textContent = stats.total_fraud_reports;
+
+            const modeBadge = document.getElementById("detectif-mode-badge");
+            if (stats.detectif_configured && !stats.detectif_mock_fallback) {
+              modeBadge.innerHTML = `<span class="status-pill pill-emerald"><span class="pulse-dot"></span> LIVE DETECTIFAI API CONNECTED</span>`;
+            } else {
+              modeBadge.innerHTML = `<span class="status-pill pill-cyan">DEVELOPMENT MOCK FALLBACK (Key Pending)</span>`;
+            }
+          }
+
+          // 2. Companies Table
+          const compResp = await fetch("/api/companies");
+          if (compResp.ok) {
+            const comps = await compResp.json();
+            compTableBody.innerHTML = comps.map(c => `
+              <tr>
+                <td><strong style="color: var(--cyan); font-family: var(--font-mono);">${c.company_code || 'PENDING'}</strong></td>
+                <td><strong style="color: #fff;">${c.name}</strong></td>
+                <td>${c.industry}<br><span style="font-size: 0.72rem; color: var(--text-muted);">${c.registration_number}</span></td>
+                <td>${c.official_email}<br><span style="font-size: 0.72rem; color: var(--text-secondary);">${c.support_contact}</span></td>
+                <td>${c.registered_employees} / ${c.declared_employees}</td>
+                <td>
+                  <span class="status-pill ${c.status === 'approved' ? 'pill-emerald' : c.status === 'pending' ? 'pill-amber' : 'pill-rose'}">
+                    ${c.status.toUpperCase()}
+                  </span>
+                </td>
+                <td>
+                  ${c.status === 'pending' 
+                    ? `<button onclick="updateCompany('${c.id}', 'approved')" class="btn-cyber" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Approve</button>`
+                    : c.status === 'approved'
+                    ? `<button onclick="updateCompany('${c.id}', 'suspended')" class="btn-danger" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Suspend</button>`
+                    : `<button onclick="updateCompany('${c.id}', 'approved')" class="btn-cyber-outline" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Re-Activate</button>`
+                  }
+                </td>
+              </tr>
+            `).join("");
+          }
+
+          // 3. Fraud Reports
+          const repResp = await fetch("/api/admin/fraud-reports", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (repResp.ok) {
+            const reps = await repResp.json();
+            if (reps.length === 0) {
+              fraudFeed.innerHTML = `<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1.5rem;">Zero active fraud alerts reported.</div>`;
+            } else {
+              fraudFeed.innerHTML = reps.map(r => `
+                <div style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 8px; padding: 0.75rem;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700;">
+                    <span style="color: var(--rose);">${r.claimed_company_name || 'Unknown Entity'}</span>
+                    <span style="color: var(--text-muted);">${r.caller_phone || 'Private Number'}</span>
+                  </div>
+                  <div style="font-size: 0.8rem; color: var(--text-primary); margin-top: 0.25rem;">${r.description}</div>
+                </div>
+              `).join("");
+            }
+          }
+
+          // 4. Audit Logs
+          const auditResp = await fetch("/api/admin/audit-logs", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (auditResp.ok) {
+            const logs = await auditResp.json();
+            auditFeed.innerHTML = logs.map(l => `
+              <div style="padding: 0.4rem 0.6rem; background: rgba(255, 255, 255, 0.02); border-left: 2px solid var(--cyan); border-radius: 4px;">
+                <span style="color: var(--cyan); font-weight: 700;">[${l.event_type}]</span>
+                <span style="color: var(--text-muted); font-size: 0.7rem;">&bull; ${l.actor}</span>
+                <div style="color: var(--text-secondary); margin-top: 0.15rem;">${l.details || ''}</div>
+              </div>
+            `).join("");
+          }
+
+        } catch (err) {
+          console.warn("Failed to load admin telemetry:", err);
+        }
+      }
+
+      window.updateCompany = async (companyId, newStatus) => {
+        const resp = await fetch(`/api/companies/${companyId}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (resp.ok) {
+          alert(`Company status updated to ${newStatus}.`);
+          loadAdminData();
+        } else {
+          alert("Failed to update status.");
+        }
+      };
+
+      loadAdminData();
+    });
+  </script>
 </body>
 </html>

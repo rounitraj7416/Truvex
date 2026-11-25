@@ -7,103 +7,274 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-mesh"></div>
+  <!-- Background Graphics -->
+  <canvas id="neural-canvas"></canvas>
+  <div class="cyber-glow glow-cyan"></div>
+  <div class="cyber-glow glow-purple"></div>
 
   <!-- Header -->
   <header>
     <div class="nav-container">
-      <a href="/" class="brand">
-        <div class="brand-logo">T</div>
-        <span class="brand-text">TRUVEX</span>
-        <span class="brand-tag">Track 03: The Trust Layer</span>
+      <a href="/" class="brand-link">
+        <div class="brand-shield">T</div>
+        <div>
+          <span class="brand-name">TRUVEX</span>
+          <span class="brand-badge">Track 03: The Trust Layer</span>
+        </div>
       </a>
-      <ul class="nav-links">
-        <li><a href="/static/customer.html">Verify Call</a></li>
-        <li><a href="/static/employee.html">Employee Portal</a></li>
-        <li><a href="/static/enterprise.html">Enterprise</a></li>
-        <li><a href="/static/admin.html">Platform Admin</a></li>
-        <li><a href="/static/login.html" class="btn-primary">Sign In</a></li>
+      <ul class="nav-menu">
+        <li><a href="/customer" class="nav-link">Verify Call</a></li>
+        <li><a href="/employee" class="nav-link">Employee Console</a></li>
+        <li><a href="/enterprise" class="nav-link">Enterprise</a></li>
+        <li><a href="/admin" class="nav-link">Admin Control</a></li>
+        <li><a href="/login" class="btn-cyber">Sign In</a></li>
       </ul>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <main>
-    <section class="hero">
-      <div class="badge">
-        <span class="status-dot"></span>
-        <span id="health-indicator">Checking backend status...</span>
+  <!-- Main Hero Content -->
+  <main class="main-wrapper">
+    <div style="text-align: center; max-width: 880px; margin: 2rem auto 3.5rem;">
+      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        <span class="status-pill pill-cyan">
+          <span class="pulse-dot"></span> Powered by DetectifAI Aletheia & Eidos
+        </span>
+        <span id="backend-status-pill" class="status-pill pill-emerald">
+          <span class="pulse-dot"></span> Backend Online (v0.2.0)
+        </span>
       </div>
-      <h1>Verify. Connect. <span class="gradient-text">Trust.</span></h1>
-      <p>
-        AI-powered universal trust infrastructure that protects customers from synthetic voice scams and business impersonation. Verified through DetectifAI <strong>Aletheia</strong> deepfake detection and <strong>Eidos</strong> voice biometrics.
+
+      <h1 style="font-size: 3.5rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.04em; margin-bottom: 1.25rem;">
+        Verify. Connect. <span style="background: linear-gradient(135deg, #00d9ff, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Trust.</span>
+      </h1>
+      <p style="font-size: 1.2rem; color: var(--text-secondary); line-height: 1.6; max-width: 760px; margin: 0 auto 2.5rem;">
+        The independent B2B2C communication verification layer protecting customers from synthetic voice clones, caller impersonation, and phone scams through voice biometrics and out-of-band Trust IDs.
       </p>
 
-      <!-- Trust ID Lookup Card -->
-      <div class="trust-lookup-card">
-        <label for="trust-id-input" class="lookup-label">Enter Received Trust ID</label>
-        <div class="input-group">
+      <!-- Quick Trust ID Verification Bar -->
+      <div class="cyber-card" style="max-width: 620px; margin: 0 auto; text-align: left; padding: 1.5rem; border-color: var(--border-glow);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+          <span style="font-size: 0.85rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;">
+            Instant Trust ID Verification
+          </span>
+          <button id="fill-demo-id-btn" style="background: none; border: none; color: var(--cyan); font-size: 0.75rem; cursor: pointer; text-decoration: underline;">
+            Fill Demo Session
+          </button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
           <input 
             type="text" 
-            id="trust-id-input" 
-            class="trust-input" 
-            placeholder="e.g. TRX-9481-2849" 
-            maxlength="16"
-            autocomplete="off"
+            id="quick-trust-id" 
+            class="form-input" 
+            style="font-family: var(--font-mono); letter-spacing: 0.05em; font-weight: 600; font-size: 1.05rem;"
+            placeholder="e.g. TRX-S-849201" 
+            value="TRX-S-849201"
           />
-          <button class="btn-primary" onclick="alert('Trust ID lookup active in Phase 2!')">Verify Session</button>
+          <button id="quick-verify-btn" class="btn-cyber">Verify Session</button>
+        </div>
+        <div id="quick-result" style="margin-top: 1rem; display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Live Platform Telemetry Counter Grid -->
+    <section style="margin-bottom: 4rem;">
+      <h2 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center; margin-bottom: 1.25rem;">
+        Live Platform Telemetry & Verification Grid
+      </h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+        <div class="cyber-card" style="padding: 1.25rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Accredited Enterprises</div>
+          <div id="stat-companies" style="font-size: 2rem; font-weight: 800; color: var(--cyan); margin-top: 0.25rem;">1</div>
+          <div style="font-size: 0.7rem; color: var(--emerald);">Vetted by Platform</div>
+        </div>
+        <div class="cyber-card" style="padding: 1.25rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Voice Enrolled Callers</div>
+          <div id="stat-enrolled" style="font-size: 2rem; font-weight: 800; color: var(--purple); margin-top: 0.25rem;">1</div>
+          <div style="font-size: 0.7rem; color: var(--cyan);">Eidos Biometric Profiles</div>
+        </div>
+        <div class="cyber-card" style="padding: 1.25rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Active Sessions</div>
+          <div id="stat-sessions" style="font-size: 2rem; font-weight: 800; color: var(--emerald); margin-top: 0.25rem;">0</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">10-min Ephemeral TTL</div>
+        </div>
+        <div class="cyber-card" style="padding: 1.25rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">DetectifAI Engine</div>
+          <div id="stat-detectif" style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 0.5rem;">READY</div>
+          <div id="stat-detectif-sub" style="font-size: 0.7rem; color: var(--cyan);">Aletheia & Eidos Active</div>
         </div>
       </div>
     </section>
 
-    <!-- Five-Layer Trust Engine Features -->
-    <section class="features-container">
-      <div class="feature-card">
-        <div class="feature-icon">🏢</div>
-        <h3>1. Business Verification</h3>
-        <p>Vetting and manual administrative approval of participating institutions, eliminating fake corporate entities.</p>
+    <!-- Five-Layer Trust Engine Breakdown -->
+    <section style="margin-bottom: 4rem;">
+      <div style="text-align: center; max-width: 650px; margin: 0 auto 2.5rem;">
+        <span class="status-pill pill-purple">Defense in Depth</span>
+        <h2 style="font-size: 2.25rem; font-weight: 800; margin-top: 0.75rem; letter-spacing: -0.02em;">
+          The Five-Layer Trust Engine
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem;">
+          No single check is sufficient. TRUVEX evaluates every communication across five independent cryptographically bound boundaries.
+        </p>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">🪪</div>
-        <h3>2. Employee Identity</h3>
-        <p>Real-time corporate directory binding ensuring only active, verified personnel can request communication sessions.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
+        <div class="cyber-card">
+          <div style="font-size: 1.8rem; margin-bottom: 0.75rem;">🏢</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.15rem; font-weight: 700;">1. Business Verification</h3>
+            <span class="status-pill pill-cyan">Weight: 20%</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.5rem; line-height: 1.5;">
+            Enterprise accreditation and manual vetting by platform superadministrators. Disqualifies illegitimate companies and assigns sequential Company IDs (e.g. <code>TRX-C-0001</code>).
+          </p>
+        </div>
+
+        <div class="cyber-card">
+          <div style="font-size: 1.8rem; margin-bottom: 0.75rem;">🪪</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.15rem; font-weight: 700;">2. Employee Directory Check</h3>
+            <span class="status-pill pill-cyan">Weight: 20%</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.5rem; line-height: 1.5;">
+            Real-time corporate directory binding. Verifies that the representative is actively employed, assigned an authorized Employee ID (e.g. <code>TRX-E-0001</code>), and has not been suspended.
+          </p>
+        </div>
+
+        <div class="cyber-card">
+          <div style="font-size: 1.8rem; margin-bottom: 0.75rem;">🛡️</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.15rem; font-weight: 700;">3. Voice Authenticity</h3>
+            <span class="status-pill pill-purple">Aletheia (20%)</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.5rem; line-height: 1.5;">
+            Evaluates pre-call fresh audio through DetectifAI <strong>Aletheia</strong> (<code>/v1/deepfake/detect</code>). Detects synthetic voice cloning, neural vocoders, and AI-generated speech. Zero tolerance for deepfakes.
+          </p>
+        </div>
+
+        <div class="cyber-card">
+          <div style="font-size: 1.8rem; margin-bottom: 0.75rem;">🎙️</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.15rem; font-weight: 700;">4. Speaker Biometrics</h3>
+            <span class="status-pill pill-purple">Eidos (20%)</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.5rem; line-height: 1.5;">
+            Voiceprint verification through DetectifAI <strong>Eidos</strong> (<code>/v1/speakers/verify</code>). Compares acoustic embeddings against the employee's enrolled biometric profile to confirm biological identity.
+          </p>
+        </div>
+
+        <div class="cyber-card">
+          <div style="font-size: 1.8rem; margin-bottom: 0.75rem;">🔐</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.15rem; font-weight: 700;">5. Ephemeral Session & Challenge</h3>
+            <span class="status-pill pill-emerald">Weight: 20%</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.5rem; line-height: 1.5;">
+            Issues a single-use Session ID (10-min TTL) bound to the intended customer and communication topic, accompanied by an interactive 4-digit out-of-band mutual challenge PIN.
+          </p>
+        </div>
+
+        <div class="cyber-card">
+          <div style="font-size: 1.8rem; margin-bottom: 0.75rem;">⚡</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.15rem; font-weight: 700;">Out-of-Band B2B2C</h3>
+            <span class="status-pill pill-cyan">No Carrier Risk</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.5rem; line-height: 1.5;">
+            Bypasses vulnerable SS7/telecom caller-ID spoofing. Customers independently verify any call on the web with zero mobile app downloads or carrier integrations required.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Platform Modules Navigation -->
+    <section>
+      <div style="text-align: center; max-width: 600px; margin: 0 auto 2rem;">
+        <h2 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Interactive Portals</h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Test each stakeholder viewpoint within the universal trust infrastructure.</p>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">🛡️</div>
-        <h3>3. Voice Authenticity</h3>
-        <p>Powered by DetectifAI <strong>Aletheia</strong> to detect deepfake synthesis, voice cloning, and AI voice conversions in real-time.</p>
-      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+        <a href="/employee" style="text-decoration: none;" class="cyber-card">
+          <div style="font-size: 1.5rem; color: var(--cyan); margin-bottom: 0.5rem;">🎧 TRUVEX Connect</div>
+          <h4 style="color: #fff; font-size: 1.05rem; font-weight: 700;">Employee Call Console</h4>
+          <p style="color: var(--text-secondary); font-size: 0.825rem; margin-top: 0.4rem;">
+            Record microphone sample, run Aletheia & Eidos live checks, and generate active Trust IDs.
+          </p>
+        </a>
 
-      <div class="feature-card">
-        <div class="feature-icon">🎙️</div>
-        <h3>4. Speaker Biometrics</h3>
-        <p>Powered by DetectifAI <strong>Eidos</strong> voice verification matching the caller against their enrolled biometric profile.</p>
-      </div>
+        <a href="/customer" style="text-decoration: none;" class="cyber-card">
+          <div style="font-size: 1.5rem; color: var(--emerald); margin-bottom: 0.5rem;">📱 MY TRUVEX</div>
+          <h4 style="color: #fff; font-size: 1.05rem; font-weight: 700;">Customer Verification</h4>
+          <p style="color: var(--text-secondary); font-size: 0.825rem; margin-top: 0.4rem;">
+            Look up caller by Company ID, Employee ID, and Session ID. View 5-layer proof & challenge PIN.
+          </p>
+        </a>
 
-      <div class="feature-card">
-        <div class="feature-icon">🔐</div>
-        <h3>5. Session Trust ID</h3>
-        <p>Short-lived, single-use cryptographic tokens (5–10 min TTL) preventing replay attacks and man-in-the-middle impersonation.</p>
-      </div>
+        <a href="/enterprise" style="text-decoration: none;" class="cyber-card">
+          <div style="font-size: 1.5rem; color: var(--purple); margin-bottom: 0.5rem;">🏢 TRUVEX Business</div>
+          <h4 style="color: #fff; font-size: 1.05rem; font-weight: 700;">Enterprise Admin</h4>
+          <p style="color: var(--text-secondary); font-size: 0.825rem; margin-top: 0.4rem;">
+            Register company, manage authorized callers, trigger voice enrollments, and set policies.
+          </p>
+        </a>
 
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>B2B2C Out-of-Band</h3>
-        <p>Completely independent of vulnerable carrier caller-ID signaling. Customers verify with zero app installation required.</p>
+        <a href="/admin" style="text-decoration: none;" class="cyber-card">
+          <div style="font-size: 1.5rem; color: var(--amber); margin-bottom: 0.5rem;">⚙️ TRUVEX Control</div>
+          <h4 style="color: #fff; font-size: 1.05rem; font-weight: 700;">Superadmin Panel</h4>
+          <p style="color: var(--text-secondary); font-size: 0.825rem; margin-top: 0.4rem;">
+            Approve companies, inspect DetectifAI status, review fraud reports, and view audit logs.
+          </p>
+        </a>
       </div>
     </section>
   </main>
 
   <!-- Footer -->
   <footer>
-    <p>TRUVEX Platform &copy; 2026 &mdash; Built for CMRIT × DetectifAI Hackathon (Track 03: The Trust Layer)</p>
+    <p>TRUVEX Platform &copy; 2026 &mdash; AI-Powered Universal Trust Infrastructure | CMRIT × DetectifAI Hackathon Track 03: The Trust Layer</p>
   </footer>
 
-  <script src="/static/js/main.js"></script>
+  <!-- Scripts -->
+  <script src="/static/js/neural-canvas.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Load platform stats
+      try {
+        const statsResp = await fetch("/api/admin/stats");
+        if (statsResp.ok) {
+          const stats = await statsResp.json();
+          document.getElementById("stat-companies").textContent = stats.approved_companies;
+          document.getElementById("stat-enrolled").textContent = stats.voice_enrolled_employees;
+          document.getElementById("stat-sessions").textContent = stats.active_sessions;
+          if (stats.detectif_configured && !stats.detectif_mock_fallback) {
+            document.getElementById("stat-detectif").textContent = "LIVE API";
+            document.getElementById("stat-detectif").style.color = "var(--emerald)";
+            document.getElementById("stat-detectif-sub").textContent = "DetectifAI Credits Active";
+          }
+        }
+      } catch (err) {
+        console.warn("Stats fetch failed:", err);
+      }
+
+      // Quick Lookup Handler
+      const quickBtn = document.getElementById("quick-verify-btn");
+      const quickInput = document.getElementById("quick-trust-id");
+      const quickResult = document.getElementById("quick-result");
+      const fillBtn = document.getElementById("fill-demo-id-btn");
+
+      fillBtn.addEventListener("click", () => {
+        window.location.href = "/customer";
+      });
+
+      quickBtn.addEventListener("click", () => {
+        const id = quickInput.value.trim();
+        if (!id) return;
+        window.location.href = `/customer?session_id=${encodeURIComponent(id)}`;
+      });
+    });
+  </script>
 </body>
 </html>

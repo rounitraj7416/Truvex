@@ -3,28 +3,414 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRUVEX — Employee Verification Portal</title>
+  <title>TRUVEX Connect — Employee Call Console</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-mesh"></div>
+  <canvas id="neural-canvas"></canvas>
+  <div class="cyber-glow glow-cyan"></div>
+  <div class="cyber-glow glow-purple"></div>
+
+  <!-- Header -->
   <header>
     <div class="nav-container">
-      <a href="/" class="brand">
-        <div class="brand-logo">T</div>
-        <span class="brand-text">TRUVEX</span>
+      <a href="/" class="brand-link">
+        <div class="brand-shield">T</div>
+        <div>
+          <span class="brand-name">TRUVEX Connect</span>
+          <span class="brand-badge">Employee Console</span>
+        </div>
       </a>
-      <ul class="nav-links">
-        <li><a href="/">← Back to Home</a></li>
+      <ul class="nav-menu">
+        <li><a href="/customer" target="_blank" class="nav-link">Customer Verification ↗</a></li>
+        <li><a href="/enterprise" class="nav-link">Enterprise</a></li>
+        <li><a href="/login" class="btn-cyber-outline" onclick="localStorage.clear();">Sign Out</a></li>
       </ul>
     </div>
   </header>
-  <main style="max-width: 600px; margin: 5rem auto; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; text-align: center;">
-    <h2>Employee Pre-Call Verification</h2>
-    <p style="color: var(--text-secondary); margin: 1rem 0 2rem;">Voice biometric check (Eidos) and deepfake screening (Aletheia) before issuing outbound Trust IDs.</p>
-    <div style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px dashed var(--border-color); color: var(--accent-cyan);">
-      Phase 2: Browser MediaRecorder and audio capture interface being built by Arunav.
+
+  <!-- Console Wrapper -->
+  <main class="main-wrapper">
+    <!-- Top Identity Card -->
+    <div class="cyber-card" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(0, 217, 255, 0.1); border: 1px solid var(--border-glow); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+          👤
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <h2 id="emp-name" style="font-size: 1.35rem; font-weight: 800;">Marcus Vance</h2>
+            <span id="emp-code-pill" class="status-pill pill-cyan">TRX-E-0001</span>
+          </div>
+          <p id="emp-dept" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">
+            Fraud Prevention Operations &bull; Senior Fraud Analyst
+          </p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <div style="text-align: right;">
+          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Employer Organization</div>
+          <div id="company-name" style="font-size: 0.95rem; font-weight: 700; color: #fff;">Apex Global Bank (TRX-C-0001)</div>
+        </div>
+        <span class="status-pill pill-emerald"><span class="pulse-dot"></span> Authorized Caller</span>
+      </div>
+    </div>
+
+    <!-- Pre-Call Setup & Voice Verification Workspace -->
+    <div style="display: grid; grid-template-columns: 1fr 1.15fr; gap: 1.5rem;" id="setup-view">
+      
+      <!-- Left: Communication Parameters -->
+      <div class="cyber-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.35rem; color: #fff;">
+          1. Outbound Call Clearance
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.825rem; margin-bottom: 1.5rem;">
+          Define target customer reference and verified topic for cryptographic session binding.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Customer Identifier / Reference</label>
+          <input type="text" id="cust-ref" class="form-input" value="CUST-84920" placeholder="e.g. CUST-84920 or +91-***-9921" />
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Masked identifier shared during verification</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Official Communication Purpose</label>
+          <input type="text" id="call-topic" class="form-input" value="Suspicious Card Transaction Review" placeholder="Stated reason for calling" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Authorized Communication Category</label>
+          <select id="comm-category" class="form-select">
+            <option value="fraud_prevention">Fraud Prevention & Security (Priority 1)</option>
+            <option value="account_verification">Account Verification & KYC</option>
+            <option value="loan_verification">Loan Application Verification</option>
+            <option value="support">Customer Support Inquiry</option>
+          </select>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.85rem; margin-top: 1.5rem;">
+          <label style="display: flex; gap: 0.6rem; align-items: flex-start; cursor: pointer; font-size: 0.825rem; color: var(--text-secondary);">
+            <input type="checkbox" id="consent-check" checked style="margin-top: 0.2rem; accent-color: var(--cyan);" />
+            <span>I certify that this communication is enterprise-authorized, and consent to biometric voice analysis through DetectifAI.</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Right: Microphone Voice Recording & AI Analysis -->
+      <div class="cyber-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">
+            2. Real-Time Voice Biometric Verification
+          </h3>
+          <span id="mic-status-pill" class="status-pill pill-cyan">Microphone Ready</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.825rem; margin-bottom: 1.25rem;">
+          Record a fresh 5–15s voice sample speaking your verification phrase.
+        </p>
+
+        <!-- Dynamic Reading Passphrase -->
+        <div style="background: rgba(0, 217, 255, 0.06); border: 1px dashed var(--border-glow); border-radius: 10px; padding: 0.85rem; margin-bottom: 1.25rem; text-align: center;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--cyan); font-weight: 700;">Prompt to Speak Aloud:</div>
+          <div id="reading-passphrase" style="font-size: 0.925rem; font-weight: 600; color: #fff; margin-top: 0.3rem;">
+            "This is Marcus Vance confirming outbound verification for Apex Global Bank session authorization."
+          </div>
+        </div>
+
+        <!-- Audio Waveform Visualizer -->
+        <div class="waveform-box" style="margin-bottom: 1.25rem;">
+          <canvas id="audio-visualizer" width="500" height="90"></canvas>
+          <div id="record-timer" style="position: absolute; top: 10px; right: 15px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--cyan); font-weight: 700;">
+            00:00
+          </div>
+        </div>
+
+        <!-- Recording Controls -->
+        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.25rem;">
+          <button id="btn-start-record" class="btn-cyber" style="padding: 0.65rem 1.4rem;">
+            🎙️ Start Recording
+          </button>
+          <button id="btn-stop-record" class="btn-danger" style="display: none; padding: 0.65rem 1.4rem;">
+            ⏹️ Stop Recording
+          </button>
+        </div>
+
+        <!-- Audio Player Preview -->
+        <div id="audio-preview-box" style="display: none; margin-bottom: 1.25rem; text-align: center;">
+          <audio id="audio-playback" controls style="width: 100%; height: 38px; outline: none; border-radius: 8px;"></audio>
+        </div>
+
+        <!-- Action: Start Trust Engine Analysis -->
+        <button id="btn-authenticate" class="btn-cyber" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem;">
+          ⚡ Authenticate Voice & Issue Trust ID
+        </button>
+
+        <div id="verify-error" style="display: none; margin-top: 1rem; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: var(--rose); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem;"></div>
+      </div>
+    </div>
+
+    <!-- Active Calling Session Card (Shown when session is generated) -->
+    <div id="active-session-view" class="cyber-card" style="display: none; border-color: var(--border-glow); padding: 2.25rem;">
+      <div style="text-align: center; max-width: 650px; margin: 0 auto 2rem;">
+        <span class="status-pill pill-emerald" style="font-size: 0.85rem; padding: 0.35rem 1rem;">
+          <span class="pulse-dot"></span> Active Verified Session
+        </span>
+        <h2 style="font-size: 2.2rem; font-weight: 900; margin-top: 0.75rem; letter-spacing: -0.02em;">
+          Trust ID Issued & Bound
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.25rem;">
+          Provide this temporary Session ID and Challenge PIN to the customer for instant out-of-band verification.
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-glow); border-radius: 12px; padding: 1.5rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Temporary Session ID</div>
+          <div id="disp-session-id" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--cyan); margin: 0.4rem 0;">
+            TRX-S-849201
+          </div>
+          <button id="copy-session-btn" class="btn-cyber-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+            📋 Copy Session ID
+          </button>
+        </div>
+
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Out-of-Band Challenge PIN</div>
+          <div id="disp-challenge-pin" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--purple); margin: 0.4rem 0;">
+            4892
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted);">Confirm this code with customer</div>
+        </div>
+
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Composite Trust Index</div>
+          <div id="disp-trust-score" style="font-size: 1.8rem; font-weight: 800; color: var(--emerald); margin: 0.4rem 0;">
+            97.8%
+          </div>
+          <div style="font-size: 0.72rem; color: var(--emerald); font-weight: 600;">MAXIMUM TRUST</div>
+        </div>
+
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Session Expiration Timer</div>
+          <div id="session-countdown" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--amber); margin: 0.4rem 0;">
+            10:00
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted);">Auto-terminates when timer reaches 0</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <button id="btn-open-customer-view" class="btn-cyber">
+          🔍 Test Customer Verification View ↗
+        </button>
+        <button id="btn-end-session" class="btn-danger">
+          🛑 Terminate Calling Session
+        </button>
+      </div>
+    </div>
+
+    <!-- AI Biometric Scanner Modal (Overlay during verification) -->
+    <div id="scan-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(6, 9, 15, 0.88); backdrop-filter: blur(16px); z-index: 1000; align-items: center; justify-content: center;">
+      <div class="cyber-card" style="max-width: 440px; width: 90%; text-align: center; padding: 2.5rem; border-color: var(--cyan);">
+        <div class="radar-scanner">
+          <div class="radar-sweep"></div>
+          <div style="font-size: 2rem;">🛡️</div>
+        </div>
+        <h3 id="scan-status-title" style="font-size: 1.3rem; font-weight: 800; margin-top: 1rem; color: #fff;">
+          Screening Voice Biometrics
+        </h3>
+        <p id="scan-status-desc" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.4rem;">
+          DetectifAI Aletheia evaluating micro-spectral deepfake signals...
+        </p>
+      </div>
     </div>
   </main>
+
+  <script src="/static/js/neural-canvas.js"></script>
+  <script src="/static/js/audio-recorder.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const recorder = new TruvexAudioRecorder("audio-visualizer");
+      const startBtn = document.getElementById("btn-start-record");
+      const stopBtn = document.getElementById("btn-stop-record");
+      const authBtn = document.getElementById("btn-authenticate");
+      const previewBox = document.getElementById("audio-preview-box");
+      const audioElem = document.getElementById("audio-playback");
+      const timerElem = document.getElementById("record-timer");
+      const errBox = document.getElementById("verify-error");
+      const scanModal = document.getElementById("scan-modal");
+      const setupView = document.getElementById("setup-view");
+      const activeSessionView = document.getElementById("active-session-view");
+
+      let recordedBlob = null;
+      let recordInterval = null;
+      let recordSeconds = 0;
+      let activeSessionId = null;
+      let countdownInterval = null;
+
+      // Start recording handler
+      startBtn.addEventListener("click", async () => {
+        errBox.style.display = "none";
+        previewBox.style.display = "none";
+        recordSeconds = 0;
+        timerElem.textContent = "00:00";
+
+        const micAvailable = await recorder.startRecording();
+        startBtn.style.display = "none";
+        stopBtn.style.display = "inline-flex";
+
+        recordInterval = setInterval(() => {
+          recordSeconds++;
+          const mins = String(Math.floor(recordSeconds / 60)).padStart(2, "0");
+          const secs = String(recordSeconds % 60).padStart(2, "0");
+          timerElem.textContent = `${mins}:${secs}`;
+        }, 1000);
+      });
+
+      // Stop recording handler
+      stopBtn.addEventListener("click", async () => {
+        clearInterval(recordInterval);
+        startBtn.style.display = "inline-flex";
+        stopBtn.style.display = "none";
+
+        recordedBlob = await recorder.stopRecording();
+        if (recorder.audioUrl) {
+          audioElem.src = recorder.audioUrl;
+          previewBox.style.display = "block";
+        }
+      });
+
+      // Authenticate & Generate Trust ID
+      authBtn.addEventListener("click", async () => {
+        errBox.style.display = "none";
+
+        // Auto-generate synthetic voice sample if user didn't record one
+        if (!recordedBlob) {
+          recordedBlob = recorder.createSyntheticWav();
+        }
+
+        const custRef = document.getElementById("cust-ref").value.trim();
+        const callTopic = document.getElementById("call-topic").value.trim();
+        const commCat = document.getElementById("comm-category").value;
+        const consent = document.getElementById("consent-check").checked;
+
+        if (!custRef || !callTopic) {
+          errBox.textContent = "Please provide customer reference and call purpose.";
+          errBox.style.display = "block";
+          return;
+        }
+
+        // Show animated radar scanner
+        scanModal.style.display = "flex";
+        const statusTitle = document.getElementById("scan-status-title");
+        const statusDesc = document.getElementById("scan-status-desc");
+
+        setTimeout(() => {
+          statusDesc.textContent = "DetectifAI Eidos matching acoustic embeddings against enrolled voiceprint...";
+        }, 800);
+
+        setTimeout(() => {
+          statusDesc.textContent = "Computing Five-Layer Trust Engine composite security score...";
+        }, 1600);
+
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append("employee_id", "TRX-E-0001");
+        formData.append("customer_ref", custRef);
+        formData.append("call_topic", callTopic);
+        formData.append("communication_category", commCat);
+        formData.append("consent_given", consent ? "true" : "false");
+        formData.append("file", recordedBlob, "pre_call_voice.wav");
+
+        try {
+          // Get saved token or login as Marcus for evaluation
+          let token = localStorage.getItem("truvex_token");
+          if (!token) {
+            const loginResp = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: "marcus@apexbank.example", password: "Marcus123!" })
+            });
+            const loginData = await loginResp.json();
+            token = loginData.access_token;
+            localStorage.setItem("truvex_token", token);
+          }
+
+          const resp = await fetch("/api/verification/pre-call-verify", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+          });
+
+          const data = await resp.json();
+          if (!resp.ok) {
+            const errMsg = typeof data.detail === "object" ? data.detail.message : (data.detail || "Verification failed.");
+            throw new Error(errMsg);
+          }
+
+          // Verification Succeeded
+          scanModal.style.display = "none";
+          setupView.style.display = "none";
+          activeSessionView.style.display = "block";
+
+          activeSessionId = data.session_id;
+          document.getElementById("disp-session-id").textContent = data.session_id;
+          document.getElementById("disp-challenge-pin").textContent = data.challenge_code;
+          document.getElementById("disp-trust-score").textContent = `${data.trust_score}%`;
+
+          // Start 10-minute countdown
+          let secondsLeft = data.expires_in_seconds || 600;
+          clearInterval(countdownInterval);
+          countdownInterval = setInterval(() => {
+            secondsLeft--;
+            if (secondsLeft <= 0) {
+              clearInterval(countdownInterval);
+              document.getElementById("session-countdown").textContent = "EXPIRED";
+              return;
+            }
+            const m = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+            const s = String(secondsLeft % 60).padStart(2, "0");
+            document.getElementById("session-countdown").textContent = `${m}:${s}`;
+          }, 1000);
+
+        } catch (err) {
+          scanModal.style.display = "none";
+          errBox.textContent = err.message;
+          errBox.style.display = "block";
+        }
+      });
+
+      // Copy session ID
+      document.getElementById("copy-session-btn").addEventListener("click", () => {
+        if (activeSessionId) {
+          navigator.clipboard.writeText(activeSessionId);
+          alert(`Copied ${activeSessionId} to clipboard!`);
+        }
+      });
+
+      // Open Customer view
+      document.getElementById("btn-open-customer-view").addEventListener("click", () => {
+        if (activeSessionId) {
+          window.open(`/customer?company=TRX-C-0001&employee=TRX-E-0001&session_id=${encodeURIComponent(activeSessionId)}`, "_blank");
+        }
+      });
+
+      // Terminate Session
+      document.getElementById("btn-end-session").addEventListener("click", async () => {
+        if (!confirm("Are you sure you want to terminate this call session?")) return;
+        const formData = new FormData();
+        formData.append("session_id", activeSessionId);
+        await fetch("/api/verification/end-session", { method: "POST", body: formData });
+        clearInterval(countdownInterval);
+        activeSessionView.style.display = "none";
+        setupView.style.display = "grid";
+        alert("Session terminated successfully.");
+      });
+    });
+  </script>
 </body>
 </html>

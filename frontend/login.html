@@ -3,28 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRUVEX — Sign In</title>
+  <title>TRUVEX — Unified Authentication</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="bg-mesh"></div>
+  <canvas id="neural-canvas"></canvas>
+  <div class="cyber-glow glow-cyan"></div>
+  <div class="cyber-glow glow-purple"></div>
+
   <header>
     <div class="nav-container">
-      <a href="/" class="brand">
-        <div class="brand-logo">T</div>
-        <span class="brand-text">TRUVEX</span>
+      <a href="/" class="brand-link">
+        <div class="brand-shield">T</div>
+        <div><span class="brand-name">TRUVEX</span></div>
       </a>
-      <ul class="nav-links">
-        <li><a href="/">← Back to Home</a></li>
+      <ul class="nav-menu">
+        <li><a href="/" class="nav-link">← Back to Home</a></li>
+        <li><a href="/customer" class="nav-link">Customer Verification</a></li>
       </ul>
     </div>
   </header>
-  <main style="max-width: 480px; margin: 5rem auto; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; text-align: center;">
-    <h2>TRUVEX Portal Sign In</h2>
-    <p style="color: var(--text-secondary); margin: 1rem 0 2rem;">Unified authentication for Enterprise Admins and Employees.</p>
-    <div style="padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px dashed var(--border-color); color: var(--accent-cyan);">
-      Phase 2: Authentication portal being built by Arunav.
+
+  <main class="main-wrapper" style="display: flex; align-items: center; justify-content: center; min-height: 75vh;">
+    <div class="cyber-card" style="max-width: 480px; width: 100%; padding: 2.25rem;">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div class="brand-shield" style="margin: 0 auto 0.75rem; width: 44px; height: 44px; font-size: 1.4rem;">T</div>
+        <h2 style="font-size: 1.6rem; font-weight: 800;">Portal Sign In</h2>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">
+          Secure access for Employees, Enterprise Admins & Superadmins.
+        </p>
+      </div>
+
+      <!-- Quick 1-Click Demo Profiles -->
+      <div style="margin-bottom: 1.5rem; background: rgba(0, 217, 255, 0.05); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--cyan); margin-bottom: 0.5rem;">
+          ⚡ Quick 1-Click Demo Profiles:
+        </div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button id="btn-demo-employee" type="button" class="btn-cyber-outline" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">
+            Employee (Marcus)
+          </button>
+          <button id="btn-demo-enterprise" type="button" class="btn-cyber-outline" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">
+            Enterprise Admin (Apex)
+          </button>
+          <button id="btn-demo-admin" type="button" class="btn-cyber-outline" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">
+            Superadmin
+          </button>
+        </div>
+      </div>
+
+      <div id="login-error" style="display: none; background: rgba(244, 63, 94, 0.15); border: 1px solid var(--rose); color: var(--rose); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1.25rem;"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="email" class="form-input" required placeholder="name@company.com" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="password" class="form-input" required placeholder="••••••••" />
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn-cyber" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 0.95rem; margin-top: 0.5rem;">
+          Sign In to TRUVEX
+        </button>
+      </form>
+
+      <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid var(--border-subtle); pt: 1rem; padding-top: 1rem;">
+        <p style="color: var(--text-muted); font-size: 0.825rem;">
+          Register a new organization? <a href="/enterprise#register" style="color: var(--cyan); text-decoration: none; font-weight: 600;">Register Enterprise</a>
+        </p>
+      </div>
     </div>
   </main>
+
+  <script src="/static/js/neural-canvas.js"></script>
+  <script>
+    const form = document.getElementById("login-form");
+    const emailInput = document.getElementById("email");
+    const passInput = document.getElementById("password");
+    const errBox = document.getElementById("login-error");
+    const submitBtn = document.getElementById("submit-btn");
+
+    // Demo Fillers
+    document.getElementById("btn-demo-employee").addEventListener("click", () => {
+      emailInput.value = "marcus@apexbank.example";
+      passInput.value = "Marcus123!";
+    });
+    document.getElementById("btn-demo-enterprise").addEventListener("click", () => {
+      emailInput.value = "admin@apexbank.example";
+      passInput.value = "ApexBank123!";
+    });
+    document.getElementById("btn-demo-admin").addEventListener("click", () => {
+      emailInput.value = "admin@truvex.ai";
+      passInput.value = "AdminPass123!";
+    });
+
+    // Auto-select Marcus initially for seamless evaluation
+    emailInput.value = "marcus@apexbank.example";
+    passInput.value = "Marcus123!";
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errBox.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Authenticating...";
+
+      try {
+        const resp = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: emailInput.value.trim(),
+            password: passInput.value
+          })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || "Authentication failed.");
+        }
+
+        // Save token and profile in localStorage
+        localStorage.setItem("truvex_token", data.access_token);
+        localStorage.setItem("truvex_user", JSON.stringify(data.user));
+
+        // Redirect based on role
+        if (data.user.role === "superadmin") {
+          window.location.href = "/admin";
+        } else if (data.user.role === "enterprise_admin") {
+          window.location.href = "/enterprise";
+        } else {
+          window.location.href = "/employee";
+        }
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign In to TRUVEX";
+      }
+    });
+  </script>
 </body>
 </html>
